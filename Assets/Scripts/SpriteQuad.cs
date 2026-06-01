@@ -10,7 +10,7 @@ public class SpriteQuad : MonoBehaviour
     void Awake()
     {
         var renderer = GetComponent<SpriteRenderer>();
-        renderer.sprite = GameSprites.White;
+        GameSprites.ConfigureRenderer(renderer);
         renderer.color = color;
         renderer.sortingOrder = sortingOrder;
         transform.localScale = new Vector3(size.x, size.y, 1f);
