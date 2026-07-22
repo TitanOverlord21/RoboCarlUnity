@@ -356,6 +356,13 @@ public class MainMenuController : MonoBehaviour
             },
             new RuleEntry
             {
+                Title = "One-Way Platform",
+                Icon = null,
+                IconTint = new Color(0.28f, 0.28f, 0.32f, 1f),
+                Body = "Thin platforms with corner supports. Carl can rise up through them from below, but lands on top and cannot fall through."
+            },
+            new RuleEntry
+            {
                 Title = "Win Line",
                 Icon = null,
                 IconTint = new Color(0.25f, 0.85f, 0.35f, 1f),
@@ -373,7 +380,7 @@ public class MainMenuController : MonoBehaviour
 
     void CreateRuleCard(Transform parent, RuleEntry entry)
     {
-        var card = MenuUi.Create(entry.Title.Replace(" ", "").Replace("&", "And"), parent);
+        var card = MenuUi.Create(entry.Title.Replace(" ", "").Replace("&", "And").Replace("-", ""), parent);
         var image = MenuUi.AddImage(card, CardColor);
         var button = card.AddComponent<Button>();
         button.targetGraphic = image;
@@ -386,6 +393,10 @@ public class MainMenuController : MonoBehaviour
         else if (entry.Title == "Draggable Wall")
         {
             CreateWallRuleIcon(card.transform);
+        }
+        else if (entry.Title == "One-Way Platform")
+        {
+            CreatePlatformRuleIcon(card.transform);
         }
         else
         {
@@ -417,6 +428,26 @@ public class MainMenuController : MonoBehaviour
         AddSpringCoilBar(iconRoot.transform, 0.36f, 0.50f, 0.78f, new Color(0.78f, 0.52f, 0.22f, 1f));
         AddSpringCoilBar(iconRoot.transform, 0.54f, 0.68f, 0.82f, new Color(0.7f, 0.45f, 0.18f, 1f));
         AddSpringCoilBar(iconRoot.transform, 0.72f, 0.88f, 0.90f, new Color(0.35f, 0.55f, 0.75f, 1f));
+    }
+
+    void CreatePlatformRuleIcon(Transform card)
+    {
+        var iconRoot = MenuUi.Create("Icon", card);
+        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), new Vector2(0.12f, 0.34f), new Vector2(0.88f, 0.90f));
+
+        var deck = MenuUi.Create("Deck", iconRoot.transform);
+        MenuUi.SetAnchors(deck.GetComponent<RectTransform>(), new Vector2(0.05f, 0.62f), new Vector2(0.95f, 0.82f));
+        MenuUi.AddImage(deck, new Color(0.28f, 0.28f, 0.32f, 1f));
+
+        var left = MenuUi.Create("LeftSupport", iconRoot.transform);
+        MenuUi.SetAnchors(left.GetComponent<RectTransform>(), new Vector2(0.08f, 0.18f), new Vector2(0.32f, 0.62f));
+        left.transform.localRotation = Quaternion.Euler(0f, 0f, 28f);
+        MenuUi.AddImage(left, new Color(0.22f, 0.22f, 0.26f, 1f));
+
+        var right = MenuUi.Create("RightSupport", iconRoot.transform);
+        MenuUi.SetAnchors(right.GetComponent<RectTransform>(), new Vector2(0.68f, 0.18f), new Vector2(0.92f, 0.62f));
+        right.transform.localRotation = Quaternion.Euler(0f, 0f, -28f);
+        MenuUi.AddImage(right, new Color(0.22f, 0.22f, 0.26f, 1f));
     }
 
     void CreateWallRuleIcon(Transform card)

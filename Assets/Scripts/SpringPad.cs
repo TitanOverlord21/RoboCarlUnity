@@ -28,6 +28,19 @@ public class SpringPad : MonoBehaviour
     BoxCollider2D _collider;
     CarlLocomotion _heldCarl;
 
+    public static SpringPad Spawn(Vector2 position, float width = 1.2f, float height = 0.35f)
+    {
+        var springObject = new GameObject("Spring");
+        springObject.SetActive(false);
+        springObject.transform.position = new Vector3(position.x, position.y, 0f);
+
+        var spring = springObject.AddComponent<SpringPad>();
+        spring.width = width;
+        spring.height = height;
+        springObject.SetActive(true);
+        return spring;
+    }
+
     void Awake()
     {
         BuildVisual();

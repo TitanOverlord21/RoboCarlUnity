@@ -25,3 +25,5 @@ MonoBehaviour:
     dragPositive: 2.5
     dragNegative: 2.86
     vertical: 1
+  platforms: []
+  springs: []

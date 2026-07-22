@@ -19,7 +19,7 @@ public class GameDirector : MonoBehaviour
         if (!disableWinLine)
             WinLine.EnsureExists();
 
-        SpawnWalls();
+        SpawnLevelProps();
     }
 
     void Start()
@@ -42,27 +42,48 @@ public class GameDirector : MonoBehaviour
             carl.SetSpawnConfig(level2Config);
     }
 
-    void SpawnWalls()
+    void SpawnLevelProps()
     {
-        var config = spawnConfig;
+        var config = ResolveSpawnConfig();
         if (config == null)
-        {
-            var carl = FindFirstObjectByType<CarlResources>();
-            if (carl != null)
-                config = carl.SpawnConfig;
-        }
-
-        if (config == null || config.Walls == null)
             return;
 
-        foreach (var entry in config.Walls)
+        if (config.Walls != null)
         {
-            DraggableWall.Spawn(
-                entry.position,
-                entry.size,
-                entry.dragPositive,
-                entry.dragNegative,
-                entry.vertical);
+            foreach (var entry in config.Walls)
+            {
+                DraggableWall.Spawn(
+                    entry.position,
+                    entry.size,
+                    entry.dragPositive,
+                    entry.dragNegative,
+                    entry.vertical);
+            }
         }
+
+        if (config.Platforms != null)
+        {
+            foreach (var entry in config.Platforms)
+                OneWayPlatform.Spawn(entry.position, entry.size);
+        }
+
+        if (config.Springs != null)
+        {
+            foreach (var entry in config.Springs)
+            {
+                float width = entry.width > 0f ? entry.width : 1.2f;
+                float height = entry.height > 0f ? entry.height : 0.35f;
+                SpringPad.Spawn(entry.position, width, height);
+            }
+        }
+    }
+
+    LevelSpawnConfig ResolveSpawnConfig()
+    {
+        if (spawnConfig != null)
+            return spawnConfig;
+
+        var carl = FindFirstObjectByType<CarlResources>();
+        return carl != null ? carl.SpawnConfig : null;
     }
 }

@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// Data-driven pickup and wall spawns for a level/scene.
+/// Data-driven pickup, wall, platform, and spring spawns for a level/scene.
 /// </summary>
 [CreateAssetMenu(fileName = "LevelSpawnConfig", menuName = "RoboCarl/Level Spawn Config")]
 public class LevelSpawnConfig : ScriptableObject
@@ -28,6 +28,21 @@ public class LevelSpawnConfig : ScriptableObject
         public bool vertical;
     }
 
+    [Serializable]
+    public struct PlatformEntry
+    {
+        public Vector2 position;
+        public Vector2 size;
+    }
+
+    [Serializable]
+    public struct SpringEntry
+    {
+        public Vector2 position;
+        public float width;
+        public float height;
+    }
+
     [SerializeField] SpawnEntry[] pickups =
     {
         new() { type = PickupType.Oil, delaySeconds = 0f, position = new Vector2(-1.8f, -6.88f) },
@@ -35,7 +50,11 @@ public class LevelSpawnConfig : ScriptableObject
     };
 
     [SerializeField] WallEntry[] walls = Array.Empty<WallEntry>();
+    [SerializeField] PlatformEntry[] platforms = Array.Empty<PlatformEntry>();
+    [SerializeField] SpringEntry[] springs = Array.Empty<SpringEntry>();
 
     public SpawnEntry[] Pickups => pickups;
     public WallEntry[] Walls => walls;
+    public PlatformEntry[] Platforms => platforms;
+    public SpringEntry[] Springs => springs;
 }
