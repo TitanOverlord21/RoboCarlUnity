@@ -98,6 +98,8 @@ Packages/packages-lock.json linguist-generated
 *.ztl                   lfs
 
 # Audio
+# wav/png kept as normal Git blobs so clones work without Git LFS
+# (small student project ~7MB total art/audio).
 *.aif                   lfs
 *.aiff                  lfs
 *.it                    lfs
@@ -105,7 +107,6 @@ Packages/packages-lock.json linguist-generated
 *.mp3                   lfs
 *.ogg                   lfs
 *.s3m                   lfs
-*.wav                   lfs
 *.xm                    lfs
 
 # Video
@@ -128,7 +129,6 @@ Packages/packages-lock.json linguist-generated
 *.jpeg                  lfs
 *.jpg                   lfs
 *.pict                  lfs
-*.png                   lfs
 *.psd                   lfs
 *.tga                   lfs
 *.tif                   lfs
