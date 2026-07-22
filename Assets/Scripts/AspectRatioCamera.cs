@@ -9,7 +9,8 @@ public class AspectRatioCamera : MonoBehaviour
     public const float WorldWidth = 9f;
     public const float WorldHeight = 19.5f;
 
-    const float TargetAspect = WorldWidth / WorldHeight;
+    /// <summary>Width / height of the mobile playfield (9:19.5).</summary>
+    public const float TargetAspect = WorldWidth / WorldHeight;
 
     Camera _camera;
 

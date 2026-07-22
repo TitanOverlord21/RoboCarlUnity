@@ -55,9 +55,15 @@ public class ResourcePickup : MonoBehaviour
             return;
 
         if (_pickupType == PickupType.Oil)
+        {
             resources.RestoreOil();
+            GameSfx.PlayOilPickup();
+        }
         else
+        {
             resources.RestoreEnergy();
+            GameSfx.PlayBatteryPickup();
+        }
 
         Destroy(gameObject);
     }

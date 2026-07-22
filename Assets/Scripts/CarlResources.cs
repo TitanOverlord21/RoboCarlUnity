@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -12,10 +11,9 @@ public class CarlResources : MonoBehaviour
     public const float EnergyDrainPerSecond = MaxValue / 25f;
     public const float OilDrainPerUnitWalked = MaxValue / (2f * AspectRatioCamera.WorldWidth);
 
-    const float OilSpawnDelay = 2f;
-    const float BatterySpawnDelay = 5f;
-    const float FloorTopY = -7.16f;
-    const float PickupRestY = 0.28f;
+    const string DefaultSpawnResource = "DefaultLevelSpawns";
+
+    [SerializeField] LevelSpawnConfig spawnConfig;
 
     public float Energy { get; private set; } = MaxValue;
     public float Oil { get; private set; } = MaxValue;
@@ -24,22 +22,34 @@ public class CarlResources : MonoBehaviour
     public bool IsEnergyLow => Energy < MaxValue * 0.5f;
     public bool IsOilLow => Oil < MaxValue * 0.5f;
     public bool IsGameOver { get; private set; }
+    public LevelSpawnConfig SpawnConfig => spawnConfig;
 
     public event Action Changed;
     public event Action GameOver;
 
-    void Start()
+    public void SetSpawnConfig(LevelSpawnConfig config)
     {
-        StartCoroutine(SpawnPickupsRoutine());
+        spawnConfig = config;
     }
 
-    IEnumerator SpawnPickupsRoutine()
+    void Awake()
     {
-        yield return new WaitForSecondsRealtime(OilSpawnDelay);
-        ResourcePickup.Spawn(PickupType.Oil, new Vector2(-1.8f, FloorTopY + PickupRestY));
+        if (spawnConfig == null)
+            spawnConfig = Resources.Load<LevelSpawnConfig>(DefaultSpawnResource);
+    }
 
-        yield return new WaitForSecondsRealtime(BatterySpawnDelay - OilSpawnDelay);
-        ResourcePickup.Spawn(PickupType.Energy, new Vector2(1.8f, FloorTopY + PickupRestY));
+    void Start()
+    {
+        SpawnPickups();
+    }
+
+    void SpawnPickups()
+    {
+        if (spawnConfig == null || spawnConfig.Pickups == null || spawnConfig.Pickups.Length == 0)
+            return;
+
+        foreach (var entry in spawnConfig.Pickups)
+            ResourcePickup.Spawn(entry.type, entry.position);
     }
 
     public void RegisterSelfWalkDistance(float distance)

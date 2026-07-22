@@ -1,9 +1,12 @@
 using UnityEngine;
 
+/// <summary>
+/// Shared white quad sprite for simple props.
+/// Keeps URP's default Sprite-Lit material (do not assign null — that renders magenta).
+/// </summary>
 public static class GameSprites
 {
     static Sprite _white;
-    static Material _spriteMaterial;
 
     public static Sprite White
     {
@@ -16,8 +19,10 @@ public static class GameSprites
             texture.SetPixel(0, 0, Color.white);
             texture.Apply();
             texture.filterMode = FilterMode.Point;
+            texture.name = "GameSprites_White";
 
             _white = Sprite.Create(texture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
+            _white.name = "GameSprites_WhiteSprite";
             return _white;
         }
     }
@@ -25,18 +30,20 @@ public static class GameSprites
     public static void ConfigureRenderer(SpriteRenderer renderer)
     {
         renderer.sprite = White;
+        ApplySpriteMaterial(renderer);
+    }
 
-        if (_spriteMaterial == null)
-        {
-            var shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Lit-Default");
-            if (shader == null)
-                shader = Shader.Find("Sprites/Default");
+    /// <summary>
+    /// Keep the renderer on URP's default Sprite-Lit material.
+    /// Explicitly assigning null clears the material and renders magenta/purple.
+    /// </summary>
+    public static void ApplySpriteMaterial(SpriteRenderer renderer)
+    {
+        if (renderer.sharedMaterial != null)
+            return;
 
-            if (shader != null)
-                _spriteMaterial = new Material(shader);
-        }
-
-        if (_spriteMaterial != null)
-            renderer.sharedMaterial = _spriteMaterial;
+        var shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Lit-Default");
+        if (shader != null)
+            renderer.sharedMaterial = new Material(shader);
     }
 }
