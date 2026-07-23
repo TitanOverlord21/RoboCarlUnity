@@ -19,6 +19,9 @@ public class AspectRatioCamera : MonoBehaviour
         _camera = GetComponent<Camera>();
         _camera.orthographic = true;
         _camera.orthographicSize = WorldHeight * 0.5f;
+
+        if (GetComponent<CarlCameraFollow>() == null)
+            gameObject.AddComponent<CarlCameraFollow>();
     }
 
     void Update()

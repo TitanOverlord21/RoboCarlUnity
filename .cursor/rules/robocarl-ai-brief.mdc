@@ -35,7 +35,7 @@ Prefer this over codebase exploration. Open specific files only when editing the
 | Level | `GameDirector` (spawn walls/button walls/platforms/springs/spikes), `LevelSession`, `Level2Layout`, `Data/LevelSpawnConfig` |
 | Props | `ResourcePickup`, `SpringPad`, `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall`, `Spikes` |
 | UI / audio | `MainMenuController`, `MenuUi`, `LoseOverlay` (restart = active scene name), `GameMusic`, `GameSfx`, `GameAudioSettings` |
-| Visual helpers | `GameSprites`, `SpriteQuad` — procedural props use `GameSprites.White` (never null material) |
+| Visual helpers | `GameSprites`, `SpriteQuad` — procedural props use `GameSprites.White` (never null material); `AspectRatioCamera` + `CarlCameraFollow` (vertical smooth chase, Carl ~1/3 up screen) |
 
 ## Conventions
 - Input System **only** — no legacy `Input.*` for gameplay
