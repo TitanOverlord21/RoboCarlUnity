@@ -53,8 +53,8 @@ public class LevelSpawnConfig : ScriptableObject
 
     [SerializeField] SpawnEntry[] pickups =
     {
-        new() { type = PickupType.Oil, delaySeconds = 0f, position = new Vector2(-1.8f, -6.88f) },
-        new() { type = PickupType.Energy, delaySeconds = 0f, position = new Vector2(3.7f, -6.88f) }
+        new() { type = PickupType.Oil, delaySeconds = 0f, position = new Vector2(-1.8f, -3.52f) },
+        new() { type = PickupType.Energy, delaySeconds = 0f, position = new Vector2(3.7f, -3.52f) }
     };
 
     [SerializeField] WallEntry[] walls = Array.Empty<WallEntry>();

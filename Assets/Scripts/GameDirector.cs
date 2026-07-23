@@ -27,8 +27,8 @@ public class GameDirector : MonoBehaviour
         if (FindFirstObjectByType<CarlResources>() != null)
             return;
 
-        ResourcePickup.Spawn(PickupType.Oil, new Vector2(-1.8f, -6.88f));
-        ResourcePickup.Spawn(PickupType.Energy, new Vector2(3.7f, -6.88f));
+        ResourcePickup.Spawn(PickupType.Oil, new Vector2(-1.8f, -3.52f));
+        ResourcePickup.Spawn(PickupType.Energy, new Vector2(3.7f, -3.52f));
     }
 
     public void ConfigureForLevel2(LevelSpawnConfig level2Config)

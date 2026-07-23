@@ -18,7 +18,7 @@ public static class Level2Layout
         if (floorLeft != null)
         {
             floorLeft.name = "Floor";
-            floorLeft.transform.position = new Vector3(0f, -7.2f, 0f);
+            floorLeft.transform.position = new Vector3(0f, -3.84f, 0f);
             // SpriteQuad already applied size in Awake; rescale visual + collider.
             floorLeft.transform.localScale = new Vector3(8.5f, 0.08f, 1f);
             var col = floorLeft.GetComponent<BoxCollider2D>();

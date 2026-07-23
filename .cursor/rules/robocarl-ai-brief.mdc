@@ -8,7 +8,7 @@ alwaysApply: true
 Prefer this over codebase exploration. Open specific files only when editing them. **Update this rule** when levels, systems, or folder layout change.
 
 ## Game
-2D URP portrait puzzle, playfield **9×19.5** (`AspectRatioCamera`). Player does **not** control Carl — Carl walks to closest **LOS-visible** oil/battery; player uses **draggable** or **button** walls. Energy drains ~25s; oil drains with walk. Energy 0 → lose. WinLine → MainMenu.
+2D URP portrait puzzle, playfield **9×19.5** (`AspectRatioCamera`). Player does **not** control Carl — Carl walks to closest **LOS-visible** oil/battery; player uses **draggable** or **button** walls. Energy drains ~100s idle / ~25s walking (same pool); oil drains with walk. Energy 0 → lose. WinLine → MainMenu.
 
 ## Levels
 | Level | Path | Notes |
@@ -21,9 +21,9 @@ Prefer this over codebase exploration. Open specific files only when editing the
 - `LevelSpawnConfig`: pickups, walls, buttonWalls, platforms, springs, spikes. Prefer editing those assets over `.unity` YAML.
 
 ## L1 anchors (SampleScene)
-- Floor Y **-7.2** (thickness **0.08**, black). Carl start ~(0, -6.61).
-- Ground spring ~(1, -7.335), size 1.2×0.35 — **top flush with floor top**.
-- WinLine Y = `WinLine.DefaultHeight` (**-2.05**), full width.
+- Floor Y **-3.84** (thickness **0.08**, black). Carl start ~(0, **-3.25**) — ⅓ up screen with camera at y=0.
+- Ground spring ~(1, -3.975), size 1.2×0.35 — **top flush with floor top**.
+- WinLine Y = `WinLine.DefaultHeight` (**1.31**), full width.
 - Spring tops must be walkable from the surface Carl is on (flush or within step-up ~20% of Carl height). Spawn position is the spring **center**, not the top.
 - One-way platforms: thin lighter deck + corner supports; `PlatformEffector2D`; LOS ignores them so elevated pickups stay chaseable.
 - Spikes: side hit → 25° knockback away (vx preserved; ground-brake disabled during knockback) + 1s grounded decision lock after settle; top hit → MainMenu. Not treated as ground; LOS ignores them.
@@ -34,7 +34,7 @@ Prefer this over codebase exploration. Open specific files only when editing the
 | Carl | `CarlResources`, `CarlLocomotion`, `CarlPickupChaser`, `CarlVisual`, `CarlSparkEffect` |
 | Level | `GameDirector` (spawn walls/button walls/platforms/springs/spikes), `LevelSession`, `Level2Layout`, `Data/LevelSpawnConfig` |
 | Props | `ResourcePickup`, `SpringPad`, `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall`, `Spikes` |
-| UI / audio | `MainMenuController`, `MenuUi`, `LoseOverlay` (restart = active scene name), `GameMusic`, `GameSfx`, `GameAudioSettings` |
+| UI / audio | `MainMenuController`, `MenuUi`, `ResourceHud` (battery meter: energy fill, oil color), `LoseOverlay` (restart = active scene name), `GameMusic`, `GameSfx`, `GameAudioSettings` |
 | Visual helpers | `GameSprites`, `SpriteQuad` — procedural props use `GameSprites.White` (never null material); `AspectRatioCamera` + `CarlCameraFollow` (vertical smooth chase, Carl ~1/3 up screen) |
 
 ## Conventions

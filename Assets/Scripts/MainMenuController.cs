@@ -317,7 +317,7 @@ public class MainMenuController : MonoBehaviour
                 Title = "Tired Carl",
                 Icon = appearance != null ? appearance.Tired : null,
                 IconTint = Color.white,
-                Body = "Carl looks tired when his energy drops below half. Energy drains over time. If it hits zero, the run ends."
+                Body = "Carl looks tired when his energy drops below half. Energy drains slowly while he stands still, and about four times faster while he walks. If it hits zero, the run ends."
             },
             new RuleEntry
             {

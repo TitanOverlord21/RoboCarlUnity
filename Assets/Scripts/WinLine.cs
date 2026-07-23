@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class WinLine : MonoBehaviour
 {
-    public const float DefaultHeight = -2.05f;
+    public const float DefaultHeight = 1.31f;
 
     const string MenuSceneName = "MainMenu";
 
