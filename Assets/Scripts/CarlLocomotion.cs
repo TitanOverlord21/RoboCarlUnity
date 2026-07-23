@@ -27,8 +27,13 @@ public class CarlLocomotion : MonoBehaviour
     float _movingDirection;
     float _desiredDirection;
     float _thinkTimer;
+    float _decisionLock;
+    bool _knockbackActive;
+    float _knockbackTimer;
+    Vector2? _pendingKnockbackVelocity;
 
     public bool IsGrounded { get; private set; }
+    public bool CanMakeDecisions => !_knockbackActive && _decisionLock <= 0f && !_resources.IsGameOver;
     public float EffectiveWalkSpeed => BaseWalkSpeed * (_resources.IsOilLow ? 0.5f : 1f);
 
     void Awake()
@@ -69,6 +74,8 @@ public class CarlLocomotion : MonoBehaviour
                 continue;
             if (hit.collider.GetComponentInParent<CarlLocomotion>() != null)
                 continue;
+            if (hit.collider.GetComponentInParent<Spikes>() != null)
+                continue;
             // Prefer the highest solid surface under the probe (floor top).
             if (hit.point.y > bestY)
             {
@@ -94,12 +101,35 @@ public class CarlLocomotion : MonoBehaviour
             return;
         }
 
+        if (_pendingKnockbackVelocity.HasValue)
+        {
+            _rigidbody.linearVelocity = _pendingKnockbackVelocity.Value;
+            _pendingKnockbackVelocity = null;
+        }
+
         RefreshGrounded();
 
-        if (IsGrounded && !_forcedMovement && !_walkRequested)
+        if (_knockbackActive)
         {
-            _rigidbody.linearVelocity = new Vector2(0f, _rigidbody.linearVelocity.y);
-            ClearDirectionIntent();
+            _knockbackTimer += Time.fixedDeltaTime;
+            // Keep sideways launch; ground-brake would wipe vx while still standing on the floor.
+            if (_knockbackTimer >= 0.2f && IsGrounded)
+            {
+                _knockbackActive = false;
+                _rigidbody.linearVelocity = new Vector2(0f, _rigidbody.linearVelocity.y);
+                ClearDirectionIntent();
+            }
+        }
+        else
+        {
+            if (_decisionLock > 0f && IsGrounded)
+                _decisionLock = Mathf.Max(0f, _decisionLock - Time.fixedDeltaTime);
+
+            if (IsGrounded && !_forcedMovement && !_walkRequested)
+            {
+                _rigidbody.linearVelocity = new Vector2(0f, _rigidbody.linearVelocity.y);
+                ClearDirectionIntent();
+            }
         }
 
         _walkRequested = false;
@@ -111,7 +141,7 @@ public class CarlLocomotion : MonoBehaviour
     /// </summary>
     public void WalkHorizontally(float direction)
     {
-        if (_resources.IsGameOver || _forcedMovement)
+        if (_resources.IsGameOver || _forcedMovement || _knockbackActive || _decisionLock > 0f)
             return;
 
         direction = Mathf.Clamp(direction, -1f, 1f);
@@ -183,6 +213,34 @@ public class CarlLocomotion : MonoBehaviour
         IsGrounded = false;
         ClearDirectionIntent();
         _rigidbody.linearVelocity = new Vector2(_rigidbody.linearVelocity.x, velocityY);
+    }
+
+    /// <summary>
+    /// Angled knockback (spike sides). Horizontal launch is preserved until Carl
+    /// settles; then a grounded decision lock runs before chasing resumes.
+    /// </summary>
+    public void SpikeKnockback(float speed, float angleDegreesFromGround, float horizontalSign, float decisionLockSeconds)
+    {
+        if (_resources.IsGameOver)
+            return;
+
+        horizontalSign = Mathf.Sign(horizontalSign);
+        if (Mathf.Approximately(horizontalSign, 0f))
+            horizontalSign = 1f;
+
+        float rad = angleDegreesFromGround * Mathf.Deg2Rad;
+        float vx = Mathf.Cos(rad) * speed * horizontalSign;
+        float vy = Mathf.Sin(rad) * speed;
+
+        _walkRequested = false;
+        IsGrounded = false;
+        ClearDirectionIntent();
+        _knockbackActive = true;
+        _knockbackTimer = 0f;
+        _decisionLock = Mathf.Max(0f, decisionLockSeconds);
+        // Apply next FixedUpdate so collision resolution doesn't eat the impulse.
+        _pendingKnockbackVelocity = new Vector2(vx, vy);
+        _rigidbody.linearVelocity = new Vector2(vx, vy);
     }
 
     public void RefreshGrounded() => IsGrounded = CheckGrounded();
@@ -298,6 +356,9 @@ public class CarlLocomotion : MonoBehaviour
             return false;
 
         if (other.transform == transform || other.transform.IsChildOf(transform))
+            return false;
+
+        if (other.GetComponentInParent<Spikes>() != null)
             return false;
 
         return true;

@@ -23,6 +23,7 @@ MonoBehaviour:
     delaySeconds: 0
     position: {x: 2.7, y: -4.72}
   walls: []
+  buttonWalls: []
   platforms:
   - position: {x: 1.9, y: -5.02}
     size: {x: 3.2, y: 0.04}
@@ -30,3 +31,4 @@ MonoBehaviour:
   - position: {x: 2.7, y: -5.175}
     width: 1.2
     height: 0.35
+  spikes: []

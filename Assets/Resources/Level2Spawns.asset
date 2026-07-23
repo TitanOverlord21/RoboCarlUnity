@@ -18,12 +18,22 @@ MonoBehaviour:
     position: {x: -4.1, y: -6.88}
   - type: 1
     delaySeconds: 0
-    position: {x: 3.6, y: -6.88}
+    position: {x: 4.15, y: -6.88}
   walls:
   - position: {x: 2, y: -3}
     size: {x: 0.45, y: 2.6}
     dragPositive: 2.5
     dragNegative: 2.86
     vertical: 1
+  buttonWalls:
+  - position: {x: -2, y: -5.86}
+    size: {x: 0.45, y: 2.6}
+    dragPositive: 2.5
+    dragNegative: 0
+    vertical: 1
   platforms: []
   springs: []
+  spikes:
+  - position: {x: 3.6, y: -6.95}
+    width: 1
+    height: 0.42

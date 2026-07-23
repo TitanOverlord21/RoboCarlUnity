@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Ensures level props exist; pickup spawning runs on CarlResources.
+/// Ensures level props exist; pickups spawn from CarlResources.
 /// </summary>
 public class GameDirector : MonoBehaviour
 {
@@ -61,6 +61,19 @@ public class GameDirector : MonoBehaviour
             }
         }
 
+        if (config.ButtonWalls != null)
+        {
+            foreach (var entry in config.ButtonWalls)
+            {
+                ButtonWall.Spawn(
+                    entry.position,
+                    entry.size,
+                    entry.dragPositive,
+                    entry.dragNegative,
+                    entry.vertical);
+            }
+        }
+
         if (config.Platforms != null)
         {
             foreach (var entry in config.Platforms)
@@ -74,6 +87,16 @@ public class GameDirector : MonoBehaviour
                 float width = entry.width > 0f ? entry.width : 1.2f;
                 float height = entry.height > 0f ? entry.height : 0.35f;
                 SpringPad.Spawn(entry.position, width, height);
+            }
+        }
+
+        if (config.Spikes != null)
+        {
+            foreach (var entry in config.Spikes)
+            {
+                float width = entry.width > 0f ? entry.width : 1.0f;
+                float height = entry.height > 0f ? entry.height : 0.42f;
+                Spikes.Spawn(entry.position, width, height);
             }
         }
     }

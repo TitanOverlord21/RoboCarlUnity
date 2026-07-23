@@ -374,6 +374,20 @@ public class MainMenuController : MonoBehaviour
                 Icon = null,
                 IconTint = new Color(0.55f, 0.58f, 0.62f, 1f),
                 Body = "Click and drag a metal wall to slide it along its length. Each wall can only move a set distance from where it starts — release to leave it in place."
+            },
+            new RuleEntry
+            {
+                Title = "Button Wall",
+                Icon = null,
+                IconTint = new Color(0.95f, 0.18f, 0.18f, 1f),
+                Body = "Tap the big red button to send this wall sliding the full length of its track. It starts slow and speeds up. You can't press again until it finishes moving."
+            },
+            new RuleEntry
+            {
+                Title = "Spikes",
+                Icon = null,
+                IconTint = new Color(0.72f, 0.72f, 0.76f, 1f),
+                Body = "Sharp floor spikes. Bumping them from the side knocks Carl back and stuns him for a second. Falling on top of them ends the run and returns to the main menu."
             }
         };
     }
@@ -393,6 +407,14 @@ public class MainMenuController : MonoBehaviour
         else if (entry.Title == "Draggable Wall")
         {
             CreateWallRuleIcon(card.transform);
+        }
+        else if (entry.Title == "Button Wall")
+        {
+            CreateButtonWallRuleIcon(card.transform);
+        }
+        else if (entry.Title == "Spikes")
+        {
+            CreateSpikesRuleIcon(card.transform);
         }
         else if (entry.Title == "One-Way Platform")
         {
@@ -465,6 +487,57 @@ public class MainMenuController : MonoBehaviour
         AddWallBolt(iconRoot.transform, 0.62f, 0.78f);
         AddWallBolt(iconRoot.transform, 0.62f, 0.48f);
         AddWallBolt(iconRoot.transform, 0.62f, 0.18f);
+    }
+
+    void CreateButtonWallRuleIcon(Transform card)
+    {
+        var iconRoot = MenuUi.Create("Icon", card);
+        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), new Vector2(0.34f, 0.28f), new Vector2(0.66f, 0.92f));
+
+        var plate = MenuUi.Create("Plate", iconRoot.transform);
+        MenuUi.StretchFull(plate.GetComponent<RectTransform>());
+        MenuUi.AddImage(plate, new Color(0.42f, 0.48f, 0.58f, 1f));
+
+        var railL = MenuUi.Create("RailL", iconRoot.transform);
+        MenuUi.SetAnchors(railL.GetComponent<RectTransform>(), new Vector2(0.12f, 0.12f), new Vector2(0.22f, 0.88f));
+        MenuUi.AddImage(railL, new Color(0.35f, 0.85f, 0.95f, 1f));
+
+        var railR = MenuUi.Create("RailR", iconRoot.transform);
+        MenuUi.SetAnchors(railR.GetComponent<RectTransform>(), new Vector2(0.78f, 0.12f), new Vector2(0.88f, 0.88f));
+        MenuUi.AddImage(railR, new Color(0.35f, 0.85f, 0.95f, 1f));
+
+        var rim = MenuUi.Create("ButtonRim", iconRoot.transform);
+        MenuUi.SetAnchors(rim.GetComponent<RectTransform>(), new Vector2(0.18f, 0.32f), new Vector2(0.82f, 0.72f));
+        MenuUi.AddImage(rim, new Color(0.35f, 0.08f, 0.08f, 1f));
+
+        var face = MenuUi.Create("ButtonFace", iconRoot.transform);
+        MenuUi.SetAnchors(face.GetComponent<RectTransform>(), new Vector2(0.28f, 0.38f), new Vector2(0.72f, 0.66f));
+        MenuUi.AddImage(face, new Color(0.95f, 0.18f, 0.18f, 1f));
+    }
+
+    void CreateSpikesRuleIcon(Transform card)
+    {
+        var iconRoot = MenuUi.Create("Icon", card);
+        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), new Vector2(0.16f, 0.30f), new Vector2(0.84f, 0.90f));
+
+        var bas = MenuUi.Create("Base", iconRoot.transform);
+        MenuUi.SetAnchors(bas.GetComponent<RectTransform>(), new Vector2(0.05f, 0.08f), new Vector2(0.95f, 0.28f));
+        MenuUi.AddImage(bas, new Color(0.22f, 0.2f, 0.22f, 1f));
+
+        AddSpikeTooth(iconRoot.transform, 0.08f);
+        AddSpikeTooth(iconRoot.transform, 0.36f);
+        AddSpikeTooth(iconRoot.transform, 0.64f);
+    }
+
+    void AddSpikeTooth(Transform parent, float xMin)
+    {
+        var tooth = MenuUi.Create("Tooth", parent);
+        MenuUi.SetAnchors(
+            tooth.GetComponent<RectTransform>(),
+            new Vector2(xMin, 0.22f),
+            new Vector2(xMin + 0.28f, 0.92f));
+        tooth.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+        MenuUi.AddImage(tooth, new Color(0.72f, 0.72f, 0.76f, 1f));
     }
 
     void AddWallBolt(Transform parent, float xMin, float yMin)
