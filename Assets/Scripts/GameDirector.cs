@@ -11,10 +11,7 @@ public class GameDirector : MonoBehaviour
     void Awake()
     {
         if (LevelSession.SelectedLevel == 2)
-        {
-            disableWinLine = true;
             Level2Layout.Apply();
-        }
 
         if (!disableWinLine)
             WinLine.EnsureExists();
@@ -33,7 +30,6 @@ public class GameDirector : MonoBehaviour
 
     public void ConfigureForLevel2(LevelSpawnConfig level2Config)
     {
-        disableWinLine = true;
         if (level2Config != null)
             spawnConfig = level2Config;
 

@@ -14,7 +14,7 @@ Prefer this over codebase exploration. Open specific files only when editing the
 | Level | Path | Notes |
 |------:|------|-------|
 | 1 | `LevelSession=1` → `SampleScene` | Scene: floors, ground Spring, WinLine, Carl. Spawns from `Resources/DefaultLevelSpawns` |
-| 2 | `LevelSession=2` → **same** `SampleScene` | `Level2Layout.Apply()` strips Spring/WinLine/FloorRight; `Level2Spawns` (batteries, left `ButtonWall`, right `Spikes` + `DraggableWall`) |
+| 2 | `LevelSession=2` → **same** `SampleScene` | Full floor; keep WinLine. Keeps right ground battery, spikes, `DraggableWall`. Adds left battery+spring, one-way platform, `ButtonWall` gate, platform oil/spring/battery |
 
 - Menu levels 1–2 only (`MainMenuController`). Play Mode starts on `MainMenu`.
 - **`Level2.unity` is unused** — not the L2 runtime path.
@@ -25,7 +25,7 @@ Prefer this over codebase exploration. Open specific files only when editing the
 - Ground spring ~(1, -3.975), size 1.2×0.35 — **top flush with floor top**.
 - WinLine Y = `WinLine.DefaultHeight` (**1.31**), full width.
 - Spring tops must be walkable from the surface Carl is on (flush or within step-up ~20% of Carl height). Spawn position is the spring **center**, not the top.
-- One-way platforms: thin lighter deck + corner supports; `PlatformEffector2D`; LOS ignores them so elevated pickups stay chaseable.
+- One-way platforms: thin lighter deck + corner supports; `PlatformEffector2D`. Solid for LOS (elevated pickups hidden from below). Ignored by start `SnapFeetToGround` so Carl doesn't spawn on a deck above him.
 - Spikes: side hit → 25° knockback away (vx preserved; ground-brake disabled during knockback) + 1s grounded decision lock after settle; top hit → MainMenu. Not treated as ground; LOS ignores them.
 
 ## Scripts (`Assets/Scripts/`)

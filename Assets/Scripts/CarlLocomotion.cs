@@ -76,6 +76,9 @@ public class CarlLocomotion : MonoBehaviour
                 continue;
             if (hit.collider.GetComponentInParent<Spikes>() != null)
                 continue;
+            // Start snap should prefer the real floor, not an elevated one-way deck above Carl.
+            if (hit.collider.GetComponentInParent<OneWayPlatform>() != null)
+                continue;
             // Prefer the highest solid surface under the probe (floor top).
             if (hit.point.y > bestY)
             {

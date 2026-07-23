@@ -14,6 +14,8 @@ public class CarlResources : MonoBehaviour
     /// <summary>Full → empty while walking (~4× idle).</summary>
     public const float EnergyWalkDrainPerSecond = MaxValue / 25f;
     public const float OilDrainPerUnitWalked = MaxValue / (2f * AspectRatioCamera.WorldWidth);
+    /// <summary>Trigger radius a bit larger than Carl's body (box is 0.55 wide).</summary>
+    public const float PickupRadius = 0.42f;
 
     const string DefaultSpawnResource = "DefaultLevelSpawns";
 
@@ -42,6 +44,28 @@ public class CarlResources : MonoBehaviour
     {
         if (spawnConfig == null)
             spawnConfig = Resources.Load<LevelSpawnConfig>(DefaultSpawnResource);
+
+        EnsurePickupRadius();
+    }
+
+    void EnsurePickupRadius()
+    {
+        var triggers = GetComponents<CircleCollider2D>();
+        CircleCollider2D pickup = null;
+        for (var i = 0; i < triggers.Length; i++)
+        {
+            if (triggers[i] != null && triggers[i].isTrigger)
+            {
+                pickup = triggers[i];
+                break;
+            }
+        }
+
+        if (pickup == null)
+            pickup = gameObject.AddComponent<CircleCollider2D>();
+
+        pickup.isTrigger = true;
+        pickup.radius = PickupRadius;
     }
 
     void Start()

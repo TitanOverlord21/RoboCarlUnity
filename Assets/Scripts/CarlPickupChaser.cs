@@ -94,14 +94,11 @@ public class CarlPickupChaser : MonoBehaviour
                 continue;
             if (hit.collider.GetComponentInParent<ResourcePickup>() != null)
                 continue;
-            // One-way decks shouldn't hide elevated pickups from below.
-            if (hit.collider.GetComponentInParent<OneWayPlatform>() != null)
-                continue;
             // Short hazards — Carl should still chase pickups past them.
             if (hit.collider.GetComponentInParent<Spikes>() != null)
                 continue;
 
-            // Solid blocker (wall, floor, spring, etc.).
+            // Solid blocker (wall, floor, spring, one-way deck, etc.).
             return false;
         }
 
