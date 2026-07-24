@@ -20,7 +20,6 @@ public class CarlCameraFollow : MonoBehaviour
         if (!TryGetCarl(out var carl))
             return;
 
-        float halfHeight = AspectRatioCamera.WorldHeight * 0.5f;
         // worldY = cameraY + (viewportY - 0.5) * worldHeight
         // → cameraY = carlY - (CarlViewportY - 0.5) * worldHeight
         float targetY = carl.position.y - (CarlViewportY - 0.5f) * AspectRatioCamera.WorldHeight;

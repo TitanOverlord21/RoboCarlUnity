@@ -33,8 +33,8 @@ Prefer this over codebase exploration. Open specific files only when editing the
 |------|-------|
 | Carl | `CarlResources`, `CarlLocomotion`, `CarlPickupChaser`, `CarlVisual`, `CarlSparkEffect` |
 | Level | `GameDirector` (spawn walls/button walls/platforms/springs/spikes), `LevelSession`, `Level2Layout`, `Data/LevelSpawnConfig` |
-| Props | `ResourcePickup`, `SpringPad`, `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall`, `Spikes` |
-| UI / audio | `MainMenuController`, `MenuUi`, `ResourceHud` (battery meter: energy fill, oil color), `LoseOverlay` (restart = active scene name), `GameMusic`, `GameSfx`, `GameAudioSettings` |
+| Props | `ResourcePickup` (oil/battery sprites from `Resources/UI/Icon_*`, same collider/restore gameplay), `SpringPad`, `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall`, `Spikes` |
+| UI / audio | `MainMenuController` (Rules icons = same `UI/Icon_Oil` / `UI/Icon_Battery`), `MenuUi`, `ResourceHud` (battery meter: energy fill, oil color), `LoseOverlay` (restart = active scene name), `GameMusic`, `GameSfx`, `GameAudioSettings` |
 | Visual helpers | `GameSprites`, `SpriteQuad` — procedural props use `GameSprites.White` (never null material); `AspectRatioCamera` + `CarlCameraFollow` (vertical smooth chase, Carl ~1/3 up screen) |
 
 ## Conventions
@@ -42,6 +42,13 @@ Prefer this over codebase exploration. Open specific files only when editing the
 - New interactables: build visual in code + Rules entry + `LevelSpawnConfig` if level-driven
 - **Do not regenerate `.meta` GUIDs** — hand-assigned; breaks SO/scene refs
 - Art: Carl PNGs via `Resources/CarlAppearance`; UI icons `Resources/UI/`. `*.png`/`*.wav` are normal Git blobs (not LFS)
+
+## Sprite / texture metas (common B&W / white-box bug)
+- If sprites render **grayscale/B&W** or Console shows `Failed to convert … to a unsigned 32 bit int` on a `.png.meta`, the `swizzle:` field is wrong.
+- Unity wants a **uint32**: `swizzle: 50462976` (identity RGBA = `0x03020100`).
+- **Never** write `swizzle: 00000000010000000200000003000000` (or similar hex blobs) — that fails YAML parse and breaks color channels on Carl + UI icons.
+- Prefer letting Unity rewrite texture metas after a correct import; when hand-editing, copy `swizzle` from a known-good Carl `.meta`.
+- Icons need real PNG alpha (transparent RGB should be `0,0,0,0`, not white-with-a=0). Opaque white mattes show as white boxes in Rules/world.
 
 ## Layout
 ```

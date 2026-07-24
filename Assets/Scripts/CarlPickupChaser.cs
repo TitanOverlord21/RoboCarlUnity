@@ -80,7 +80,7 @@ public class CarlPickupChaser : MonoBehaviour
         if (distance < 0.001f)
             return true;
 
-        int count = Physics2D.RaycastNonAlloc(from, delta / distance, LosHits, distance);
+        int count = Physics2D.Raycast(from, delta / distance, ContactFilter2D.noFilter, LosHits, distance);
         for (var i = 0; i < count; i++)
         {
             var hit = LosHits[i];
