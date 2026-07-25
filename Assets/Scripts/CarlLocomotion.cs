@@ -204,6 +204,20 @@ public class CarlLocomotion : MonoBehaviour
     }
 
     /// <summary>
+    /// Sustained vertical wind from upward/downward fans. Sets Y (does not drain oil).
+    /// </summary>
+    public void SetExternalVelocityY(float velocityY)
+    {
+        if (_resources.IsGameOver)
+            return;
+
+        var v = _rigidbody.linearVelocity;
+        _rigidbody.linearVelocity = new Vector2(v.x, velocityY);
+        if (velocityY > 0.05f)
+            IsGrounded = false;
+    }
+
+    /// <summary>
     /// For future scripted movement; does not drain oil.
     /// </summary>
     public void SetForcedHorizontalVelocity(float velocityX)

@@ -73,7 +73,8 @@ public class GameDirector : MonoBehaviour
                     entry.size,
                     entry.dragPositive,
                     entry.dragNegative,
-                    entry.vertical);
+                    entry.vertical,
+                    showButton: !entry.hideButton);
             }
         }
 
@@ -99,7 +100,7 @@ public class GameDirector : MonoBehaviour
             {
                 float width = entry.width > 0f ? entry.width : 1.0f;
                 float height = entry.height > 0f ? entry.height : 0.42f;
-                Spikes.Spawn(entry.position, width, height);
+                Spikes.Spawn(entry.position, width, height, faceDown: entry.faceDown);
             }
         }
     }

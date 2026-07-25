@@ -27,6 +27,8 @@ public class LevelSpawnConfig : ScriptableObject
         public float dragNegative;
         [Tooltip("If true, length is vertical (drag on Y). If false, drag on X.")]
         public bool vertical;
+        [Tooltip("If true, omit the on-wall red button (use a LinkedWallButton instead).")]
+        public bool hideButton;
     }
 
     [Serializable]
@@ -50,6 +52,8 @@ public class LevelSpawnConfig : ScriptableObject
         public Vector2 position;
         public float width;
         public float height;
+        [Tooltip("If true, tips point down (ceiling spikes).")]
+        public bool faceDown;
     }
 
     [SerializeField] SpawnEntry[] pickups =

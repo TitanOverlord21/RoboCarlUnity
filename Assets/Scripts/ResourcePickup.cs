@@ -91,6 +91,20 @@ public class ResourcePickup : MonoBehaviour
         _body.linearVelocity = new Vector2(velocityX, v.y);
     }
 
+    /// <summary>
+    /// Fan wind: set vertical velocity (upward / downward fans).
+    /// </summary>
+    public void SetWindVelocityY(float velocityY)
+    {
+        if (_body == null)
+            _body = GetComponent<Rigidbody2D>();
+        if (_body == null)
+            return;
+
+        var v = _body.linearVelocity;
+        _body.linearVelocity = new Vector2(v.x, velocityY);
+    }
+
     void OnTriggerEnter2D(Collider2D other) => TryCollect(other);
 
     void OnTriggerStay2D(Collider2D other) => TryCollect(other);

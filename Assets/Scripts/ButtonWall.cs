@@ -29,6 +29,8 @@ public class ButtonWall : MonoBehaviour
     [SerializeField] float dragPositive = 2f;
     [Tooltip("Max travel from the start position along the negative length axis.")]
     [SerializeField] float dragNegative = 2.5f;
+    [Tooltip("If false, no on-wall red button (linked / external trigger only).")]
+    [SerializeField] bool showButton = true;
 
     Rigidbody2D _body;
     Vector2 _startPosition;
@@ -45,7 +47,7 @@ public class ButtonWall : MonoBehaviour
 
     /// <summary>
     /// Starts a toggle slide from the wall's current position. No-op while busy.
-    /// Used by linked multi-door buttons; the wall's own button still works alone.
+    /// Used by linked multi-door buttons; the wall's own button still works alone when shown.
     /// </summary>
     public bool TryTriggerToggle()
     {
@@ -60,7 +62,8 @@ public class ButtonWall : MonoBehaviour
         Vector2 size,
         float dragPositive,
         float dragNegative,
-        bool vertical = true)
+        bool vertical = true,
+        bool showButton = true)
     {
         var wallObject = new GameObject("ButtonWall");
         wallObject.SetActive(false);
@@ -71,6 +74,7 @@ public class ButtonWall : MonoBehaviour
         wall.vertical = vertical;
         wall.dragPositive = Mathf.Max(0f, dragPositive);
         wall.dragNegative = Mathf.Max(0f, dragNegative);
+        wall.showButton = showButton;
         wallObject.SetActive(true);
         return wall;
     }
@@ -102,7 +106,7 @@ public class ButtonWall : MonoBehaviour
 
     void Update()
     {
-        if (_moving)
+        if (_moving || !showButton)
             return;
 
         var pointer = Pointer.current;
@@ -278,6 +282,9 @@ public class ButtonWall : MonoBehaviour
 
         for (var i = 0; i < rivetLocals.Length; i++)
             AddPlate(visualRoot, $"Rivet{i}", RivetColor, Vector2.one * rivet, rivetLocals[i], 7);
+
+        if (!showButton)
+            return;
 
         // Large center button — sized for easy mobile taps.
         float button = Mathf.Clamp(Mathf.Max(thickness * 1.15f, 0.55f), 0.5f, 0.85f);

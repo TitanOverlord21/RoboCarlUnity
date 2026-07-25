@@ -2,8 +2,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Floor spikes: landing on top returns to the main menu; hitting from the side
+/// Spikes: hitting the pointed face returns to the main menu; hitting from the side
 /// knocks Carl away at a shallow angle and locks his decisions briefly.
+/// Floor spikes point up; ceiling spikes (<see cref="faceDown"/>) point down.
 /// </summary>
 public class Spikes : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class Spikes : MonoBehaviour
     const float SideLaunchSpeed = 4.6f;
     const float SideLaunchAngleDegrees = 25f;
     const float DecisionLockSeconds = 1f;
-    const float TopNormalThreshold = -0.55f;
+    const float DeadlyNormalThreshold = 0.55f;
 
     static readonly Color BaseColor = new(0.22f, 0.2f, 0.22f, 1f);
     static readonly Color SpikeColor = new(0.72f, 0.72f, 0.76f, 1f);
@@ -19,10 +20,11 @@ public class Spikes : MonoBehaviour
 
     [SerializeField] float width = 1.0f;
     [SerializeField] float height = 0.42f;
+    [SerializeField] bool faceDown;
 
     bool _triggered;
 
-    public static Spikes Spawn(Vector2 position, float width = 1.0f, float height = 0.42f)
+    public static Spikes Spawn(Vector2 position, float width = 1.0f, float height = 0.42f, bool faceDown = false)
     {
         var spikesObject = new GameObject("Spikes");
         spikesObject.SetActive(false);
@@ -31,6 +33,7 @@ public class Spikes : MonoBehaviour
         var spikes = spikesObject.AddComponent<Spikes>();
         spikes.width = width;
         spikes.height = height;
+        spikes.faceDown = faceDown;
         spikesObject.SetActive(true);
         return spikes;
     }
@@ -56,11 +59,15 @@ public class Spikes : MonoBehaviour
         if (locomotion == null)
             return;
 
-        if (!TryGetWorstContact(collision, out var normal))
+        if (!TryGetDeadliestContact(collision, out var normal))
             return;
 
-        // Carl above → normal into spikes points downward (same as SpringPad).
-        if (normal.y <= TopNormalThreshold)
+        // Floor spikes: Carl above → normal into spikes points down.
+        // Ceiling spikes: Carl below → normal into spikes points up.
+        bool deadly = faceDown
+            ? normal.y >= DeadlyNormalThreshold
+            : normal.y <= -DeadlyNormalThreshold;
+        if (deadly)
         {
             KillCarl();
             return;
@@ -77,20 +84,20 @@ public class Spikes : MonoBehaviour
         locomotion.SpikeKnockback(SideLaunchSpeed, SideLaunchAngleDegrees, away, DecisionLockSeconds);
     }
 
-    static bool TryGetWorstContact(Collision2D collision, out Vector2 normal)
+    bool TryGetDeadliestContact(Collision2D collision, out Vector2 normal)
     {
         normal = Vector2.zero;
         if (collision.contactCount <= 0)
             return false;
 
-        // Prefer the most downward normal (strongest top-hit signal).
-        float bestY = float.PositiveInfinity;
+        // Prefer the strongest signal on the pointed face.
+        float best = faceDown ? float.NegativeInfinity : float.PositiveInfinity;
         for (var i = 0; i < collision.contactCount; i++)
         {
             var n = collision.GetContact(i).normal;
-            if (n.y < bestY)
+            if (faceDown ? n.y > best : n.y < best)
             {
-                bestY = n.y;
+                best = n.y;
                 normal = n;
             }
         }
@@ -113,6 +120,8 @@ public class Spikes : MonoBehaviour
         var visualRoot = new GameObject("Visual").transform;
         visualRoot.SetParent(transform, false);
         visualRoot.localPosition = Vector3.zero;
+        if (faceDown)
+            visualRoot.localScale = new Vector3(1f, -1f, 1f);
 
         AddPart(visualRoot, "Base", BaseColor, new Vector2(width, height * 0.22f), new Vector2(0f, -height * 0.39f), 0f, 2);
 

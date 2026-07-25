@@ -19,6 +19,9 @@ MonoBehaviour:
   - type: 0
     delaySeconds: 0
     position: {x: 3.35, y: -3.52}
+  - type: 0
+    delaySeconds: 0
+    position: {x: 3.35, y: -0.55}
   walls: []
   buttonWalls:
   - position: {x: -1.15, y: -2.8}
@@ -26,11 +29,27 @@ MonoBehaviour:
     dragPositive: 2
     dragNegative: 0
     vertical: 1
+    hideButton: 1
   - position: {x: 1.15, y: -2.8}
     size: {x: 0.45, y: 2}
     dragPositive: 2
     dragNegative: 0
     vertical: 1
-  platforms: []
-  springs: []
-  spikes: []
+    hideButton: 1
+  platforms:
+  - position: {x: -2.7, y: -1.66}
+    size: {x: 2.2, y: 0.04}
+  - position: {x: 2.7, y: -1.66}
+    size: {x: 2.4, y: 0.04}
+  springs:
+  - position: {x: -2.3, y: -3.975}
+    width: 1.2
+    height: 0.35
+  - position: {x: 2.3, y: -3.975}
+    width: 1.2
+    height: 0.35
+  spikes:
+  - position: {x: -2.7, y: -0.7}
+    width: 1.8
+    height: 0.42
+    faceDown: 1

@@ -4,10 +4,18 @@ using UnityEngine;
 /// Powered industrial fan. When on: blades spin, wind streaks blow outward,
 /// pushes Carl and oil/battery pickups (stronger when closer). Wind (force and
 /// visuals) is blocked by solid terrain. Hum plays while powered and on-camera.
+/// Supports left/right (horizontal) and up (vertical) facing.
 /// </summary>
 [DefaultExecutionOrder(100)]
 public class PoweredFan : MonoBehaviour, IPowerable
 {
+    public enum Facing
+    {
+        Right,
+        Left,
+        Up
+    }
+
     const string HousingSpritePath = "Props/Prop_FanHousing";
     const string BladesSpritePath = "Props/Prop_FanBlades";
 
@@ -22,9 +30,9 @@ public class PoweredFan : MonoBehaviour, IPowerable
     const float DefaultHeight = 1.55f;
 
     [SerializeField] float height = DefaultHeight;
-    [SerializeField] bool faceRight = true;
+    [SerializeField] Facing facing = Facing.Right;
     [SerializeField] float windRange = DefaultWindRange;
-    [SerializeField] float windHeight = 1.8f;
+    [SerializeField] float windCross = 1.8f;
 
     Transform _bladeRoot;
     Transform _windRoot;
@@ -36,7 +44,8 @@ public class PoweredFan : MonoBehaviour, IPowerable
     float _housingDepth;
 
     public bool IsPowered => _powered;
-    public bool FaceRight => faceRight;
+    public Facing BlowFacing => facing;
+    public bool FaceRight => facing == Facing.Right;
     public Vector2 WireAttachPoint => transform.position;
     public float HousingDepth => _housingDepth;
 
@@ -46,15 +55,24 @@ public class PoweredFan : MonoBehaviour, IPowerable
         float height = DefaultHeight,
         float windRange = DefaultWindRange)
     {
+        return Spawn(position, faceRight ? Facing.Right : Facing.Left, height, windRange);
+    }
+
+    public static PoweredFan Spawn(
+        Vector2 position,
+        Facing facing,
+        float height = DefaultHeight,
+        float windRange = DefaultWindRange)
+    {
         var go = new GameObject("PoweredFan");
         go.SetActive(false);
         go.transform.position = new Vector3(position.x, position.y, 0f);
 
         var fan = go.AddComponent<PoweredFan>();
         fan.height = Mathf.Max(0.8f, height);
-        fan.faceRight = faceRight;
+        fan.facing = facing;
         fan.windRange = Mathf.Max(1f, windRange);
-        fan.windHeight = Mathf.Max(1f, height * 1.15f);
+        fan.windCross = Mathf.Max(1f, height * 1.15f);
         go.SetActive(true);
         return fan;
     }
@@ -91,7 +109,7 @@ public class PoweredFan : MonoBehaviour, IPowerable
 
         if (_bladeRoot != null)
         {
-            float dir = faceRight ? -1f : 1f;
+            float dir = facing == Facing.Left ? 1f : -1f;
             _bladeRoot.Rotate(0f, 0f, BladeSpinSpeed * dir * Time.deltaTime);
         }
 
@@ -109,14 +127,27 @@ public class PoweredFan : MonoBehaviour, IPowerable
 
     void PushTargets()
     {
-        float windSign = faceRight ? 1f : -1f;
         var origin = GetNozzleOrigin();
-        float halfH = windHeight * 0.5f;
+        var windDir = GetWindDirection();
+        float halfCross = windCross * 0.5f;
 
         if (_carl == null)
             _carl = FindAnyObjectByType<CarlLocomotion>();
         if (_carl != null)
-            TryPushBody(_carl.transform.position, origin, windSign, halfH, speed => _carl.AddExternalVelocityX(speed));
+        {
+            TryPushBody(
+                _carl.transform.position,
+                origin,
+                windDir,
+                halfCross,
+                speed =>
+                {
+                    if (facing == Facing.Up)
+                        _carl.SetExternalVelocityY(speed);
+                    else
+                        _carl.AddExternalVelocityX(speed);
+                });
+        }
 
         for (var i = 0; i < ResourcePickup.ActivePickups.Count; i++)
         {
@@ -127,20 +158,30 @@ public class PoweredFan : MonoBehaviour, IPowerable
             TryPushBody(
                 pickup.transform.position,
                 origin,
-                windSign,
-                halfH,
-                speed => pickup.SetWindVelocityX(speed));
+                windDir,
+                halfCross,
+                speed =>
+                {
+                    if (facing == Facing.Up)
+                        pickup.SetWindVelocityY(speed);
+                    else
+                        pickup.SetWindVelocityX(speed);
+                });
         }
     }
 
-    void TryPushBody(Vector2 target, Vector2 origin, float windSign, float halfH, System.Action<float> applySpeed)
+    void TryPushBody(Vector2 target, Vector2 origin, Vector2 windDir, float halfCross, System.Action<float> applySpeed)
     {
-        float along = (target.x - origin.x) * windSign;
+        Vector2 delta = target - origin;
+        float along = Vector2.Dot(delta, windDir);
         if (along < 0f || along > windRange)
             return;
 
-        float vertical = Mathf.Abs(target.y - origin.y);
-        if (vertical > halfH)
+        // Perpendicular distance from the wind axis.
+        float across = facing == Facing.Up
+            ? Mathf.Abs(delta.x)
+            : Mathf.Abs(delta.y);
+        if (across > halfCross)
             return;
 
         if (!HasClearWindPath(origin, target))
@@ -148,15 +189,32 @@ public class PoweredFan : MonoBehaviour, IPowerable
 
         float falloff = 1f - (along / windRange);
         falloff *= falloff;
-        float edge = 1f - Mathf.Clamp01(vertical / halfH);
-        float speed = MaxPushSpeed * falloff * Mathf.Lerp(0.35f, 1f, edge) * windSign;
+        float edge = 1f - Mathf.Clamp01(across / halfCross);
+        float speed = MaxPushSpeed * falloff * Mathf.Lerp(0.35f, 1f, edge);
+        if (facing == Facing.Left)
+            speed = -speed;
         applySpeed(speed);
+    }
+
+    Vector2 GetWindDirection()
+    {
+        return facing switch
+        {
+            Facing.Left => Vector2.left,
+            Facing.Up => Vector2.up,
+            _ => Vector2.right
+        };
     }
 
     Vector2 GetNozzleOrigin()
     {
-        float x = transform.position.x + (faceRight ? _housingDepth * 0.45f : -_housingDepth * 0.45f);
-        return new Vector2(x, transform.position.y);
+        float nozzle = _housingDepth * 0.45f;
+        return facing switch
+        {
+            Facing.Left => new Vector2(transform.position.x - nozzle, transform.position.y),
+            Facing.Up => new Vector2(transform.position.x, transform.position.y + nozzle),
+            _ => new Vector2(transform.position.x + nozzle, transform.position.y)
+        };
     }
 
     /// <summary>
@@ -210,8 +268,10 @@ public class PoweredFan : MonoBehaviour, IPowerable
             return false;
         if (collider.GetComponentInParent<ResourcePickup>() != null)
             return false;
-        // Other fans / buttons / pickups of wind — solids like walls, floors,
-        // one-ways, springs, spikes, and fan housings block the breeze.
+        // One-ways let Carl rise through; wind passes the same way.
+        if (collider.GetComponentInParent<OneWayPlatform>() != null)
+            return false;
+        // Solids like walls, floors, springs, spikes, and fan housings block.
         return true;
     }
 
@@ -220,9 +280,10 @@ public class PoweredFan : MonoBehaviour, IPowerable
         if (_windStreaks == null)
             return;
 
+        // Streaks are authored in right-facing local space; Left/Up come from
+        // visualRoot scale/rotation, so keep local motion along +X.
         var origin = GetNozzleOrigin();
-        float windSign = faceRight ? 1f : -1f;
-        var windDir = new Vector2(windSign, 0f);
+        var windDir = GetWindDirection();
 
         _windPulse += Time.deltaTime * 3.5f;
         for (var i = 0; i < _windStreaks.Length; i++)
@@ -231,8 +292,10 @@ public class PoweredFan : MonoBehaviour, IPowerable
             if (streak == null)
                 continue;
 
-            float y = ((i % 3) - 1) * (windHeight * 0.22f);
-            var rayOrigin = origin + new Vector2(0f, y);
+            float across = ((i % 3) - 1) * (windCross * 0.22f);
+            var rayOrigin = facing == Facing.Up
+                ? origin + new Vector2(across, 0f)
+                : origin + new Vector2(0f, across);
             float clear = GetClearWindDistance(rayOrigin, windDir, windRange);
             if (clear < 0.12f)
             {
@@ -250,8 +313,8 @@ public class PoweredFan : MonoBehaviour, IPowerable
 
             var t = streak.transform;
             float maxAlong = clear * 0.92f;
-            float x = Mathf.Lerp(0.1f, maxAlong, u) * windSign;
-            t.localPosition = new Vector3(x, y, 0f);
+            float x = Mathf.Lerp(0.1f, maxAlong, u);
+            t.localPosition = new Vector3(x, across, 0f);
             float len = Mathf.Min(Mathf.Lerp(0.35f, 0.9f, 1f - u), Mathf.Max(0.12f, clear * 0.25f));
             t.localScale = new Vector3(len, 0.06f, 1f);
         }
@@ -307,12 +370,16 @@ public class PoweredFan : MonoBehaviour, IPowerable
 
     void BuildCollider()
     {
-        // Slim solid body at the screen edge — wind still reaches pickups in front.
+        // Slim solid body — wind still reaches pickups in front / above.
         float depth = Mathf.Max(0.45f, _housingDepth * 0.85f);
         var collider = gameObject.GetComponent<BoxCollider2D>();
         if (collider == null)
             collider = gameObject.AddComponent<BoxCollider2D>();
-        collider.size = new Vector2(depth, height * 0.92f);
+
+        if (facing == Facing.Up)
+            collider.size = new Vector2(height * 0.92f, depth);
+        else
+            collider.size = new Vector2(depth, height * 0.92f);
         collider.offset = Vector2.zero;
         collider.isTrigger = false;
     }
@@ -325,7 +392,8 @@ public class PoweredFan : MonoBehaviour, IPowerable
         var visualRoot = new GameObject("Visual").transform;
         visualRoot.SetParent(transform, false);
 
-        float facing = faceRight ? 1f : -1f;
+        // Build in the Right-facing layout, then rotate the whole visual for Left/Up.
+        float facingScaleX = 1f;
         var housingSprite = Resources.Load<Sprite>(HousingSpritePath);
         var bladesSprite = Resources.Load<Sprite>(BladesSpritePath);
 
@@ -337,7 +405,7 @@ public class PoweredFan : MonoBehaviour, IPowerable
 
             var housing = new GameObject("Housing");
             housing.transform.SetParent(visualRoot, false);
-            housing.transform.localScale = new Vector3(facing * scale, scale, 1f);
+            housing.transform.localScale = new Vector3(facingScaleX * scale, scale, 1f);
 
             var renderer = housing.AddComponent<SpriteRenderer>();
             renderer.sprite = housingSprite;
@@ -354,7 +422,7 @@ public class PoweredFan : MonoBehaviour, IPowerable
         _bladeRoot = new GameObject("Blades").transform;
         _bladeRoot.SetParent(visualRoot, false);
         // Sit in the front opening of the side-facing housing.
-        _bladeRoot.localPosition = new Vector3(facing * _housingDepth * 0.22f, 0.02f, 0f);
+        _bladeRoot.localPosition = new Vector3(facingScaleX * _housingDepth * 0.22f, 0.02f, 0f);
 
         if (bladesSprite != null)
         {
@@ -391,11 +459,17 @@ public class PoweredFan : MonoBehaviour, IPowerable
 
         _windRoot = new GameObject("Wind").transform;
         _windRoot.SetParent(visualRoot, false);
-        _windRoot.localPosition = new Vector3(facing * _housingDepth * 0.48f, 0f, 0f);
+        _windRoot.localPosition = new Vector3(facingScaleX * _housingDepth * 0.48f, 0f, 0f);
 
         _windStreaks = new SpriteRenderer[5];
         for (var i = 0; i < _windStreaks.Length; i++)
             _windStreaks[i] = AddPlate(_windRoot, $"Streak{i}", WindColor, new Vector2(0.5f, 0.06f), Vector2.zero, 3);
+
+        // Orient the built right-facing art.
+        if (facing == Facing.Left)
+            visualRoot.localScale = new Vector3(-1f, 1f, 1f);
+        else if (facing == Facing.Up)
+            visualRoot.localRotation = Quaternion.Euler(0f, 0f, 90f);
     }
 
     static SpriteRenderer AddPlate(
