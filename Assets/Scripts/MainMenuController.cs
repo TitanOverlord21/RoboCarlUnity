@@ -110,7 +110,7 @@ public class MainMenuController : MonoBehaviour
         for (var i = 0; i < LevelCount; i++)
         {
             int level = i + 1;
-            bool available = level <= 2;
+            bool available = level <= 3;
             var color = available ? AccentColor : MutedColor;
             string label = available ? $"Level {level}" : $"Level {level}\nSoon";
 
@@ -384,6 +384,20 @@ public class MainMenuController : MonoBehaviour
             },
             new RuleEntry
             {
+                Title = "Power Button",
+                Icon = null,
+                IconTint = new Color(0.95f, 0.18f, 0.18f, 1f),
+                Body = "A red switch on a small pedestal with teal terminals. Tap it to power everything it is connected to — by a green wire, or by sitting on/next to a device. One button can feed several devices."
+            },
+            new RuleEntry
+            {
+                Title = "Fan",
+                Icon = null,
+                IconTint = new Color(0.55f, 0.85f, 1f, 1f),
+                Body = "When powered, blades spin and wind blows out the front. The breeze pushes Carl, oil cans, and batteries — stronger the closer they are. Turns on with a click, then hums while it is on screen."
+            },
+            new RuleEntry
+            {
                 Title = "Spikes",
                 Icon = null,
                 IconTint = new Color(0.72f, 0.72f, 0.76f, 1f),
@@ -411,6 +425,14 @@ public class MainMenuController : MonoBehaviour
         else if (entry.Title == "Button Wall")
         {
             CreateButtonWallRuleIcon(card.transform);
+        }
+        else if (entry.Title == "Power Button")
+        {
+            CreatePowerButtonRuleIcon(card.transform);
+        }
+        else if (entry.Title == "Fan")
+        {
+            CreateFanRuleIcon(card.transform);
         }
         else if (entry.Title == "Spikes")
         {
@@ -487,6 +509,10 @@ public class MainMenuController : MonoBehaviour
         AddWallBolt(iconRoot.transform, 0.62f, 0.78f);
         AddWallBolt(iconRoot.transform, 0.62f, 0.48f);
         AddWallBolt(iconRoot.transform, 0.62f, 0.18f);
+
+        var shaft = MenuUi.Create("ArrowShaft", iconRoot.transform);
+        MenuUi.SetAnchors(shaft.GetComponent<RectTransform>(), new Vector2(0.42f, 0.22f), new Vector2(0.58f, 0.78f));
+        MenuUi.AddImage(shaft, new Color(1f, 0.88f, 0.15f, 1f));
     }
 
     void CreateButtonWallRuleIcon(Transform card)
@@ -513,6 +539,55 @@ public class MainMenuController : MonoBehaviour
         var face = MenuUi.Create("ButtonFace", iconRoot.transform);
         MenuUi.SetAnchors(face.GetComponent<RectTransform>(), new Vector2(0.28f, 0.38f), new Vector2(0.72f, 0.66f));
         MenuUi.AddImage(face, new Color(0.95f, 0.18f, 0.18f, 1f));
+    }
+
+    void CreatePowerButtonRuleIcon(Transform card)
+    {
+        var iconRoot = MenuUi.Create("Icon", card);
+        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), new Vector2(0.28f, 0.30f), new Vector2(0.72f, 0.92f));
+
+        var pedestal = MenuUi.Create("Pedestal", iconRoot.transform);
+        MenuUi.StretchFull(pedestal.GetComponent<RectTransform>());
+        MenuUi.AddImage(pedestal, new Color(0.32f, 0.36f, 0.44f, 1f));
+
+        var termL = MenuUi.Create("TermL", iconRoot.transform);
+        MenuUi.SetAnchors(termL.GetComponent<RectTransform>(), new Vector2(0.08f, 0.12f), new Vector2(0.28f, 0.28f));
+        MenuUi.AddImage(termL, new Color(0.2f, 0.85f, 0.75f, 1f));
+
+        var termR = MenuUi.Create("TermR", iconRoot.transform);
+        MenuUi.SetAnchors(termR.GetComponent<RectTransform>(), new Vector2(0.72f, 0.12f), new Vector2(0.92f, 0.28f));
+        MenuUi.AddImage(termR, new Color(0.2f, 0.85f, 0.75f, 1f));
+
+        var rim = MenuUi.Create("ButtonRim", iconRoot.transform);
+        MenuUi.SetAnchors(rim.GetComponent<RectTransform>(), new Vector2(0.18f, 0.36f), new Vector2(0.82f, 0.86f));
+        MenuUi.AddImage(rim, new Color(0.35f, 0.08f, 0.08f, 1f));
+
+        var face = MenuUi.Create("ButtonFace", iconRoot.transform);
+        MenuUi.SetAnchors(face.GetComponent<RectTransform>(), new Vector2(0.28f, 0.44f), new Vector2(0.72f, 0.78f));
+        MenuUi.AddImage(face, new Color(0.95f, 0.18f, 0.18f, 1f));
+    }
+
+    void CreateFanRuleIcon(Transform card)
+    {
+        var iconRoot = MenuUi.Create("Icon", card);
+        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), new Vector2(0.12f, 0.28f), new Vector2(0.88f, 0.92f));
+
+        var housingSprite = Resources.Load<Sprite>("Props/Prop_FanHousing");
+        var bladesSprite = Resources.Load<Sprite>("Props/Prop_FanBlades");
+
+        var housing = MenuUi.Create("Housing", iconRoot.transform);
+        MenuUi.SetAnchors(housing.GetComponent<RectTransform>(), new Vector2(0.05f, 0.08f), new Vector2(0.72f, 0.95f));
+        var housingImage = MenuUi.AddImage(housing, Color.white, housingSprite);
+        housingImage.preserveAspect = true;
+        if (housingSprite == null)
+            housingImage.color = new Color(0.38f, 0.42f, 0.5f, 1f);
+
+        var blades = MenuUi.Create("Blades", iconRoot.transform);
+        MenuUi.SetAnchors(blades.GetComponent<RectTransform>(), new Vector2(0.38f, 0.28f), new Vector2(0.82f, 0.78f));
+        var bladesImage = MenuUi.AddImage(blades, Color.white, bladesSprite);
+        bladesImage.preserveAspect = true;
+        if (bladesSprite == null)
+            bladesImage.color = new Color(0.72f, 0.76f, 0.82f, 1f);
     }
 
     void CreateSpikesRuleIcon(Transform card)
@@ -575,6 +650,13 @@ public class MainMenuController : MonoBehaviour
             // Use the shared SampleScene base; Level2Layout strips L1 props and
             // spawns the draggable wall from Level2Spawns.
             LevelSession.SelectedLevel = 2;
+            SceneManager.LoadScene(Level1SceneName);
+            return;
+        }
+
+        if (level == 3)
+        {
+            LevelSession.SelectedLevel = 3;
             SceneManager.LoadScene(Level1SceneName);
             return;
         }

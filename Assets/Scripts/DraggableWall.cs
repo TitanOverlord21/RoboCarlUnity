@@ -11,6 +11,7 @@ public class DraggableWall : MonoBehaviour
     static readonly Color EdgeColor = new(0.38f, 0.4f, 0.44f, 1f);
     static readonly Color BoltColor = new(0.28f, 0.3f, 0.33f, 1f);
     static readonly Color BoltHighlight = new(0.72f, 0.74f, 0.78f, 1f);
+    static readonly Color ArrowColor = new(1f, 0.88f, 0.15f, 1f);
 
     [SerializeField] Vector2 size = new(0.4f, 2.5f);
     [Tooltip("If true, length is vertical (drag on Y). If false, length is horizontal (drag on X).")]
@@ -205,6 +206,46 @@ public class DraggableWall : MonoBehaviour
                 boltLocals[i] + new Vector2(-boltSize * 0.12f, boltSize * 0.12f),
                 6);
         }
+
+        BuildDragHintArrows(visualRoot);
+    }
+
+    void BuildDragHintArrows(Transform visualRoot)
+    {
+        float length = vertical ? size.y : size.x;
+        float thickness = vertical ? size.x : size.y;
+        float shaftThick = Mathf.Clamp(thickness * 0.22f, 0.07f, 0.12f);
+        float shaftLen = Mathf.Clamp(length * 0.34f, 0.45f, 0.9f);
+        float head = Mathf.Clamp(thickness * 0.42f, 0.14f, 0.22f);
+
+        if (vertical)
+        {
+            AddPlate(visualRoot, "ArrowShaft", ArrowColor, new Vector2(shaftThick, shaftLen), Vector2.zero, 12);
+            // Triangle tip is +Y; place tips outward past each shaft end.
+            AddArrowHead(visualRoot, "ArrowHeadPos", new Vector2(0f, shaftLen * 0.5f + head * 0.28f), head, 0f);
+            AddArrowHead(visualRoot, "ArrowHeadNeg", new Vector2(0f, -shaftLen * 0.5f - head * 0.28f), head, 180f);
+        }
+        else
+        {
+            AddPlate(visualRoot, "ArrowShaft", ArrowColor, new Vector2(shaftLen, shaftThick), Vector2.zero, 12);
+            AddArrowHead(visualRoot, "ArrowHeadPos", new Vector2(shaftLen * 0.5f + head * 0.28f, 0f), head, -90f);
+            AddArrowHead(visualRoot, "ArrowHeadNeg", new Vector2(-shaftLen * 0.5f - head * 0.28f, 0f), head, 90f);
+        }
+    }
+
+    static void AddArrowHead(Transform parent, string name, Vector2 localPosition, float size, float zRotation)
+    {
+        var head = new GameObject(name);
+        head.transform.SetParent(parent, false);
+        head.transform.localPosition = localPosition;
+        head.transform.localRotation = Quaternion.Euler(0f, 0f, zRotation);
+        head.transform.localScale = new Vector3(size, size, 1f);
+
+        var renderer = head.AddComponent<SpriteRenderer>();
+        renderer.sprite = GameSprites.Triangle;
+        GameSprites.ApplySpriteMaterial(renderer);
+        renderer.color = ArrowColor;
+        renderer.sortingOrder = 13;
     }
 
     static void AddPlate(Transform parent, string name, Color color, Vector2 plateSize, Vector2 localPosition, int sortingOrder)

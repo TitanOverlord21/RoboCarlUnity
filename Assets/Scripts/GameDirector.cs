@@ -12,11 +12,16 @@ public class GameDirector : MonoBehaviour
     {
         if (LevelSession.SelectedLevel == 2)
             Level2Layout.Apply();
+        else if (LevelSession.SelectedLevel == 3)
+            Level3Layout.Apply();
 
         if (!disableWinLine)
             WinLine.EnsureExists();
 
         SpawnLevelProps();
+
+        if (LevelSession.SelectedLevel == 3)
+            Level3Layout.SpawnDoorLinkButton();
     }
 
     void Start()
@@ -28,14 +33,16 @@ public class GameDirector : MonoBehaviour
         ResourcePickup.Spawn(PickupType.Energy, new Vector2(3.7f, -3.52f));
     }
 
-    public void ConfigureForLevel2(LevelSpawnConfig level2Config)
+    public void ConfigureForLevel2(LevelSpawnConfig level2Config) => ConfigureSpawnConfig(level2Config);
+
+    public void ConfigureSpawnConfig(LevelSpawnConfig config)
     {
-        if (level2Config != null)
-            spawnConfig = level2Config;
+        if (config != null)
+            spawnConfig = config;
 
         var carl = FindAnyObjectByType<CarlResources>();
-        if (carl != null && level2Config != null)
-            carl.SetSpawnConfig(level2Config);
+        if (carl != null && config != null)
+            carl.SetSpawnConfig(config);
     }
 
     void SpawnLevelProps()

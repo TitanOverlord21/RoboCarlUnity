@@ -41,6 +41,20 @@ public class ButtonWall : MonoBehaviour
     float _moveTimer;
     float _moveDuration;
 
+    public bool IsMoving => _moving;
+
+    /// <summary>
+    /// Starts a toggle slide from the wall's current position. No-op while busy.
+    /// Used by linked multi-door buttons; the wall's own button still works alone.
+    /// </summary>
+    public bool TryTriggerToggle()
+    {
+        if (_moving)
+            return false;
+
+        return BeginToggleMove();
+    }
+
     public static ButtonWall Spawn(
         Vector2 position,
         Vector2 size,
@@ -144,13 +158,13 @@ public class ButtonWall : MonoBehaviour
         BeginToggleMove();
     }
 
-    void BeginToggleMove()
+    bool BeginToggleMove()
     {
         float startAxis = vertical ? _startPosition.y : _startPosition.x;
         float min = startAxis - dragNegative;
         float max = startAxis + dragPositive;
         if (Mathf.Abs(max - min) < 0.001f)
-            return;
+            return false;
 
         float current = GetAxis();
         float target = _nextTargetIsMax ? max : min;
@@ -159,7 +173,7 @@ public class ButtonWall : MonoBehaviour
             _nextTargetIsMax = !_nextTargetIsMax;
             target = _nextTargetIsMax ? max : min;
             if (Mathf.Abs(current - target) < 0.02f)
-                return;
+                return false;
         }
 
         _moveFrom = current;
@@ -170,6 +184,7 @@ public class ButtonWall : MonoBehaviour
         _moving = true;
         _nextTargetIsMax = !_nextTargetIsMax;
         SetButtonBusy(true);
+        return true;
     }
 
     float GetAxis() => vertical ? _body.position.y : _body.position.x;

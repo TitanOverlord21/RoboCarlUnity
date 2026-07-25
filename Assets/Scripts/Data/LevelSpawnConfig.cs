@@ -3,6 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Data-driven pickup, wall, button-wall, platform, spring, and spike spawns for a level/scene.
+/// Fans/power buttons are currently spawned from Level3Layout (need live wire refs).
 /// </summary>
 [CreateAssetMenu(fileName = "LevelSpawnConfig", menuName = "RoboCarl/Level Spawn Config")]
 public class LevelSpawnConfig : ScriptableObject

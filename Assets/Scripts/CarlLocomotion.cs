@@ -191,6 +191,19 @@ public class CarlLocomotion : MonoBehaviour
     }
 
     /// <summary>
+    /// Adds horizontal velocity after locomotion (fans). Does not drain oil.
+    /// Call from a later FixedUpdate (see PoweredFan execution order).
+    /// </summary>
+    public void AddExternalVelocityX(float velocityX)
+    {
+        if (_resources.IsGameOver || Mathf.Approximately(velocityX, 0f))
+            return;
+
+        var v = _rigidbody.linearVelocity;
+        _rigidbody.linearVelocity = new Vector2(v.x + velocityX, v.y);
+    }
+
+    /// <summary>
     /// For future scripted movement; does not drain oil.
     /// </summary>
     public void SetForcedHorizontalVelocity(float velocityX)

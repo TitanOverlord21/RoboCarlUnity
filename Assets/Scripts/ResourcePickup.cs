@@ -19,6 +19,8 @@ public class ResourcePickup : MonoBehaviour
 
     public PickupType Type => _pickupType;
 
+    Rigidbody2D _body;
+
     void OnEnable() => ActivePickups.Add(this);
 
     void OnDisable() => ActivePickups.Remove(this);
@@ -34,6 +36,7 @@ public class ResourcePickup : MonoBehaviour
         body.simulated = true;
 
         var pickup = pickupObject.AddComponent<ResourcePickup>();
+        pickup._body = body;
         pickup.Initialize(type);
         return pickup;
     }
@@ -41,12 +44,25 @@ public class ResourcePickup : MonoBehaviour
     void Initialize(PickupType type)
     {
         _pickupType = type;
+        if (_body == null)
+            _body = GetComponent<Rigidbody2D>();
 
         var collider = gameObject.AddComponent<CircleCollider2D>();
         collider.isTrigger = true;
         collider.radius = 0.45f;
 
         BuildVisual();
+    }
+
+    /// <summary>Kinematic nudge used by fans / scripted push.</summary>
+    public void Nudge(Vector2 delta)
+    {
+        if (_body == null)
+            _body = GetComponent<Rigidbody2D>();
+        if (_body == null)
+            return;
+
+        _body.MovePosition(_body.position + delta);
     }
 
     void OnTriggerEnter2D(Collider2D other)
