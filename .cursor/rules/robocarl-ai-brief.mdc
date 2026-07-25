@@ -29,7 +29,7 @@ Prefer this over codebase exploration. Open specific files only when editing the
 - **Spring side-stuck:** Flush springs are solid boxes; after Carl stops against one (e.g. blocked by a wall), physics can keep him on a **side** contact (`normal.y ≈ 0`) so the pad never fires and feels like a wall. `SpringPad` also mounts when Carl is grounded with feet at the pad top; `TryStepUp` allows ~0 flush lifts. Keep both if changing spring/step logic.
 - One-way platforms: thin lighter deck + corner supports; `PlatformEffector2D`. Solid for LOS (elevated pickups hidden from below). Ignored by start `SnapFeetToGround` so Carl doesn't spawn on a deck above him.
 - Spikes: side hit → 25° knockback away (vx preserved; ground-brake disabled during knockback) + 1s grounded decision lock after settle; top hit → MainMenu. Not treated as ground; LOS ignores them.
-- Fans (`PoweredFan` / `IPowerable`): sprites `Resources/Props/Prop_FanHousing` + `Prop_FanBlades`. Powered by `PowerButton` (multi-target; wire and/or mounted). On → blades spin + wind streaks; hum while on-camera. Pushes Carl + oil/battery with distance falloff.
+- Fans (`PoweredFan` / `IPowerable`): sprites `Resources/Props/Prop_FanHousing` + `Prop_FanBlades` (true alpha — never ship AI PNGs with baked checkerboard “transparency”). Rules card uses `Prop_FanRules` (housing+blades composite). Powered by `PowerButton`. On → blades spin + wind streaks; hum while on-camera. Pushes Carl + oil/battery with distance falloff. **Wind force + streaks are LOS-blocked by solids** (walls, floors, one-ways, springs, etc.).
 - `LinkedWallButton`: one press triggers `ButtonWall.TryTriggerToggle()` on each linked door from its own current position; per-door buttons still work alone.
 
 ## Scripts (`Assets/Scripts/`)
@@ -54,6 +54,12 @@ Prefer this over codebase exploration. Open specific files only when editing the
 - **Never** write `swizzle: 00000000010000000200000003000000` (or similar hex blobs) — that fails YAML parse and breaks color channels on Carl + UI icons.
 - Prefer letting Unity rewrite texture metas after a correct import; when hand-editing, copy `swizzle` from a known-good Carl `.meta`.
 - Icons need real PNG alpha (transparent RGB should be `0,0,0,0`, not white-with-a=0). Opaque white mattes show as white boxes in Rules/world.
+- **AI image “checkerboard transparency”:** generators often bake the gray/white preview grid into RGB with full alpha. That square then rotates with spinning sprites (e.g. fan blades). Strip to real alpha or redraw procedurally before import — do not use the raw generated file.
+
+## Rules / UI geometry icons (garbled quads)
+- **Root cause:** `MenuUi.WhiteSprite` must be an **owned 1×1 RGBA texture** + `Sprite.Create`. Never build UI sprites from `Texture2D.whiteTexture` — that shared built-in frequently garbles under RectMask2D / URP.
+- **Second cause:** rotating a **non-square** `Image` rect (e.g. spike “diamonds” at 45°) shears into a mess. Prefer axis-aligned quads, or `GameSprites.Triangle` + `preserveAspect` (no fake diamonds from rotated rectangles).
+- Decorative Rules parts use `MenuUi.AddDecor` (`raycastTarget = false`).
 
 ## Layout
 ```

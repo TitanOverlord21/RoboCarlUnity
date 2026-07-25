@@ -24,6 +24,12 @@ public static class MenuUi
         }
     }
 
+    /// <summary>
+    /// Solid white UI sprite from an owned 1×1 texture.
+    /// Do NOT use <see cref="Texture2D.whiteTexture"/> here — Unity's shared
+    /// built-in often produces garbled / washed UI quads (especially under
+    /// RectMask2D, rotation, or URP), which is why Rules geometry icons break.
+    /// </summary>
     public static Sprite WhiteSprite
     {
         get
@@ -31,13 +37,23 @@ public static class MenuUi
             if (_whiteSprite != null)
                 return _whiteSprite;
 
-            var texture = Texture2D.whiteTexture;
+            var texture = new Texture2D(1, 1, TextureFormat.RGBA32, false)
+            {
+                name = "MenuUi_WhiteTex",
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            texture.SetPixel(0, 0, Color.white);
+            texture.Apply(false, false);
+
             _whiteSprite = Sprite.Create(
                 texture,
-                new Rect(0, 0, texture.width, texture.height),
+                new Rect(0, 0, 1, 1),
                 new Vector2(0.5f, 0.5f),
                 100f);
             _whiteSprite.name = "MenuUi_White";
+            _whiteSprite.hideFlags = HideFlags.HideAndDontSave;
             return _whiteSprite;
         }
     }
@@ -123,6 +139,18 @@ public static class MenuUi
         image.sprite = sprite != null ? sprite : WhiteSprite;
         image.color = color;
         image.type = Image.Type.Simple;
+        image.useSpriteMesh = false;
+        return image;
+    }
+
+    /// <summary>
+    /// Colored quad for Rules / decorative UI. Non-raycasting so it won't steal taps.
+    /// </summary>
+    public static Image AddDecor(GameObject go, Color color, Sprite sprite = null, bool preserveAspect = false)
+    {
+        var image = AddImage(go, color, sprite);
+        image.raycastTarget = false;
+        image.preserveAspect = preserveAspect;
         return image;
     }
 

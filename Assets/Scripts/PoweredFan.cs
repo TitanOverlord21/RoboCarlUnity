@@ -2,8 +2,8 @@ using UnityEngine;
 
 /// <summary>
 /// Powered industrial fan. When on: blades spin, wind streaks blow outward,
-/// pushes Carl and oil/battery pickups (stronger when closer). Hum plays while
-/// powered and on-camera (click comes from the power button).
+/// pushes Carl and oil/battery pickups (stronger when closer). Wind (force and
+/// visuals) is blocked by solid terrain. Hum plays while powered and on-camera.
 /// </summary>
 [DefaultExecutionOrder(100)]
 public class PoweredFan : MonoBehaviour, IPowerable
@@ -14,6 +14,7 @@ public class PoweredFan : MonoBehaviour, IPowerable
     static readonly Color WindColor = new(0.55f, 0.85f, 1f, 0.35f);
     static readonly Color FallbackHousing = new(0.38f, 0.42f, 0.5f, 1f);
     static readonly Color FallbackBlade = new(0.72f, 0.76f, 0.82f, 1f);
+    static readonly RaycastHit2D[] WindHits = new RaycastHit2D[12];
 
     const float BladeSpinSpeed = 720f;
     const float MaxPushSpeed = 4.2f;
@@ -142,6 +143,9 @@ public class PoweredFan : MonoBehaviour, IPowerable
         if (vertical > halfH)
             return;
 
+        if (!HasClearWindPath(origin, target))
+            return;
+
         float falloff = 1f - (along / windRange);
         falloff *= falloff;
         float edge = 1f - Mathf.Clamp01(vertical / halfH);
@@ -155,10 +159,70 @@ public class PoweredFan : MonoBehaviour, IPowerable
         return new Vector2(x, transform.position.y);
     }
 
+    /// <summary>
+    /// True if no solid terrain sits between nozzle and target.
+    /// Ignores triggers, Carl, pickups, and this fan's own colliders.
+    /// </summary>
+    bool HasClearWindPath(Vector2 from, Vector2 to)
+    {
+        Vector2 delta = to - from;
+        float distance = delta.magnitude;
+        if (distance < 0.001f)
+            return true;
+
+        int count = Physics2D.Raycast(from, delta / distance, ContactFilter2D.noFilter, WindHits, distance);
+        for (var i = 0; i < count; i++)
+        {
+            if (IsWindBlocker(WindHits[i].collider))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>Clear travel distance along a wind ray before hitting terrain.</summary>
+    float GetClearWindDistance(Vector2 from, Vector2 direction, float maxDistance)
+    {
+        if (maxDistance <= 0.001f)
+            return 0f;
+
+        int count = Physics2D.Raycast(from, direction, ContactFilter2D.noFilter, WindHits, maxDistance);
+        float clear = maxDistance;
+        for (var i = 0; i < count; i++)
+        {
+            var hit = WindHits[i];
+            if (!IsWindBlocker(hit.collider))
+                continue;
+            if (hit.distance < clear)
+                clear = hit.distance;
+        }
+
+        return clear;
+    }
+
+    bool IsWindBlocker(Collider2D collider)
+    {
+        if (collider == null || collider.isTrigger)
+            return false;
+        if (collider.transform == transform || collider.transform.IsChildOf(transform))
+            return false;
+        if (collider.GetComponentInParent<CarlLocomotion>() != null)
+            return false;
+        if (collider.GetComponentInParent<ResourcePickup>() != null)
+            return false;
+        // Other fans / buttons / pickups of wind — solids like walls, floors,
+        // one-ways, springs, spikes, and fan housings block the breeze.
+        return true;
+    }
+
     void AnimateWind()
     {
         if (_windStreaks == null)
             return;
+
+        var origin = GetNozzleOrigin();
+        float windSign = faceRight ? 1f : -1f;
+        var windDir = new Vector2(windSign, 0f);
 
         _windPulse += Time.deltaTime * 3.5f;
         for (var i = 0; i < _windStreaks.Length; i++)
@@ -167,6 +231,16 @@ public class PoweredFan : MonoBehaviour, IPowerable
             if (streak == null)
                 continue;
 
+            float y = ((i % 3) - 1) * (windHeight * 0.22f);
+            var rayOrigin = origin + new Vector2(0f, y);
+            float clear = GetClearWindDistance(rayOrigin, windDir, windRange);
+            if (clear < 0.12f)
+            {
+                streak.enabled = false;
+                continue;
+            }
+
+            streak.enabled = true;
             float phase = _windPulse + i * 0.85f;
             float u = Mathf.Repeat(phase * 0.35f, 1f);
             float alpha = (1f - u) * 0.45f;
@@ -175,12 +249,10 @@ public class PoweredFan : MonoBehaviour, IPowerable
             streak.color = c;
 
             var t = streak.transform;
-            float x = Mathf.Lerp(0.1f, windRange * 0.85f, u);
-            if (!faceRight)
-                x = -x;
-            float y = ((i % 3) - 1) * (windHeight * 0.22f);
+            float maxAlong = clear * 0.92f;
+            float x = Mathf.Lerp(0.1f, maxAlong, u) * windSign;
             t.localPosition = new Vector3(x, y, 0f);
-            float len = Mathf.Lerp(0.35f, 0.9f, 1f - u);
+            float len = Mathf.Min(Mathf.Lerp(0.35f, 0.9f, 1f - u), Mathf.Max(0.12f, clear * 0.25f));
             t.localScale = new Vector3(len, 0.06f, 1f);
         }
     }
