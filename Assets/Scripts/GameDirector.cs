@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -10,10 +11,19 @@ public class GameDirector : MonoBehaviour
 
     void Awake()
     {
-        if (LevelSession.SelectedLevel == 2)
-            Level2Layout.Apply();
-        else if (LevelSession.SelectedLevel == 3)
-            Level3Layout.Apply();
+        // Each level binds its own spawn asset; scene objects are only the shared base.
+        switch (LevelSession.SelectedLevel)
+        {
+            case 2:
+                Level2Layout.Apply();
+                break;
+            case 3:
+                Level3Layout.Apply();
+                break;
+            default:
+                Level1Layout.Apply();
+                break;
+        }
 
         if (!disableWinLine)
             WinLine.EnsureExists();
@@ -26,14 +36,21 @@ public class GameDirector : MonoBehaviour
 
     void Start()
     {
-        if (FindAnyObjectByType<CarlResources>() != null)
-            return;
+        if (FindAnyObjectByType<CarlResources>() == null)
+        {
+            ResourcePickup.Spawn(PickupType.Oil, new Vector2(-1.8f, -3.52f));
+            ResourcePickup.Spawn(PickupType.Energy, new Vector2(3.7f, -3.52f));
+        }
 
-        ResourcePickup.Spawn(PickupType.Oil, new Vector2(-1.8f, -3.52f));
-        ResourcePickup.Spawn(PickupType.Energy, new Vector2(3.7f, -3.52f));
+        // Pickups spawn in CarlResources.Start; wait one frame so the dump is complete.
+        StartCoroutine(WriteLevelDumpNextFrame());
     }
 
-    public void ConfigureForLevel2(LevelSpawnConfig level2Config) => ConfigureSpawnConfig(level2Config);
+    IEnumerator WriteLevelDumpNextFrame()
+    {
+        yield return null;
+        LevelPropDump.WriteActiveLevel();
+    }
 
     public void ConfigureSpawnConfig(LevelSpawnConfig config)
     {

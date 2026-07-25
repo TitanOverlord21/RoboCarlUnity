@@ -24,6 +24,9 @@ public class Spikes : MonoBehaviour
 
     bool _triggered;
 
+    public bool FaceDown => faceDown;
+    public Vector2 Size => new(width, height);
+
     public static Spikes Spawn(Vector2 position, float width = 1.0f, float height = 0.42f, bool faceDown = false)
     {
         var spikesObject = new GameObject("Spikes");

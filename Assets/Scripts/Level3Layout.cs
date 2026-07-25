@@ -25,7 +25,7 @@ public static class Level3Layout
 
     public static void Apply()
     {
-        DestroyByName("Spring");
+        DestroyAllByName("Spring");
         DestroyByName("FloorRight");
 
         var floorLeft = GameObject.Find("FloorLeft");
@@ -133,5 +133,17 @@ public static class Level3Layout
         var go = GameObject.Find(objectName);
         if (go != null)
             Object.Destroy(go);
+    }
+
+    static void DestroyAllByName(string objectName)
+    {
+        while (true)
+        {
+            var go = GameObject.Find(objectName);
+            if (go == null)
+                break;
+            Object.Destroy(go);
+            go.name = $"{objectName}__Destroyed";
+        }
     }
 }

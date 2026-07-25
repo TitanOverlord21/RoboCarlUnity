@@ -44,6 +44,8 @@ public class ButtonWall : MonoBehaviour
     float _moveDuration;
 
     public bool IsMoving => _moving;
+    public bool ShowButton => showButton;
+    public Vector2 Size => size;
 
     /// <summary>
     /// Starts a toggle slide from the wall's current position. No-op while busy.

@@ -21,6 +21,8 @@ public class SpringPad : MonoBehaviour
     [SerializeField] float width = 1.2f;
     [SerializeField] float height = 0.35f;
 
+    public Vector2 Size => new(width, height);
+
     State _state = State.Idle;
     float _timer;
     Transform _visualRoot;

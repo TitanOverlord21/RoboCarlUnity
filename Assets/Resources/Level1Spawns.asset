@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f2b6d7e8a9c0315c6d7e8f9a0b1c2d3e, type: 3}
-  m_Name: DefaultLevelSpawns
+  m_Name: Level1Spawns
   m_EditorClassIdentifier: 
   pickups:
   - type: 0

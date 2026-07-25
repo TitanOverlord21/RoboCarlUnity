@@ -11,15 +11,17 @@ Prefer this over codebase exploration. Open specific files only when editing the
 2D URP portrait puzzle, playfield **9×19.5** (`AspectRatioCamera`). Player does **not** control Carl — Carl walks to closest **LOS-visible** oil/battery; player uses **draggable** or **button** walls, plus **power buttons** for devices. Energy drains ~100s idle / ~25s walking (same pool); oil drains with walk. Energy 0 → lose. WinLine → MainMenu.
 
 ## Levels
+Shared base scene only: `SampleScene` (split floors, L1 ground Spring, WinLine, Carl). Each level applies its own `LevelNLayout` + `Resources/LevelNSpawns` — keep those assets separate; do not assume elevated L1 props are “L2 leftovers.”
+
 | Level | Path | Notes |
 |------:|------|-------|
-| 1 | `LevelSession=1` → `SampleScene` | Scene: floors, ground Spring, WinLine, Carl. Spawns from `Resources/DefaultLevelSpawns` |
-| 2 | `LevelSession=2` → **same** `SampleScene` | Full floor; keep WinLine. Keeps right ground battery, spikes, `DraggableWall` (yellow ↔ drag arrows). Adds left battery+spring, one-way platform, `ButtonWall` gate, platform oil/spring/battery |
-| 3 | `LevelSession=3` → **same** `SampleScene` | Full floor; Carl between two buttonless `ButtonWall` gates + center `LinkedWallButton` (only way to slide both). Past each door: ground spring → one-way. Left: ceiling floor + downward spikes (spring bounce trap). Right: upward fan **under** the one-way (blows up through it; wind ignores one-ways) + oil on deck + ground oil kept; fan `PowerButton` mounted on the fan. Side fans at `±4.1`; left energy on ground; left fan mounted `PowerButton`; right fan wired button above. |
+| 1 | `LevelSession=1` → `SampleScene` | `Level1Layout` + `Level1Spawns`: ground oil + ground battery; one-way + platform spring + platform battery. Scene keeps floors + ground Spring + WinLine + Carl |
+| 2 | `LevelSession=2` → **same** `SampleScene` | `Level2Layout` (full floor, strip scene Spring) + `Level2Spawns`: left battery+spring, right ground battery+spikes, one-way, platform oil/spring/battery, `DraggableWall`, `ButtonWall` |
+| 3 | `LevelSession=3` → **same** `SampleScene` | `Level3Layout` + `Level3Spawns` (+ fans/buttons in layout code). Buttonless dual doors + `LinkedWallButton`; side springs/one-ways; left ceiling spikes; upward fan under right one-way; side fans |
 
 - Menu levels 1–3 only (`MainMenuController`). Play Mode starts on `MainMenu`.
 - **`Level2.unity` is unused** — not the L2 runtime path.
-- `LevelSpawnConfig`: pickups, walls, buttonWalls, platforms, springs, spikes. Prefer editing those assets over `.unity` YAML. Fans/power buttons spawned from `Level3Layout` (need live refs for wires).
+- `LevelSpawnConfig`: pickups, walls, buttonWalls, platforms, springs, spikes. Prefer editing the matching `LevelNSpawns` asset over `.unity` YAML. Fans/power buttons spawned from `Level3Layout` (need live refs for wires).
 
 ## L1 anchors (SampleScene)
 - Floor Y **-3.84** (thickness **0.08**, black). Carl start ~(0, **-3.25**) — ⅓ up screen with camera at y=0.
@@ -36,7 +38,7 @@ Prefer this over codebase exploration. Open specific files only when editing the
 | Area | Files |
 |------|-------|
 | Carl | `CarlResources`, `CarlLocomotion` (`AddExternalVelocityX` / `SetExternalVelocityY` for fans), `CarlPickupChaser`, `CarlVisual`, `CarlSparkEffect` |
-| Level | `GameDirector` (spawn walls/button walls/platforms/springs/spikes), `LevelSession`, `Level2Layout`, `Level3Layout`, `Data/LevelSpawnConfig` |
+| Level | `GameDirector` (spawn walls/button walls/platforms/springs/spikes), `LevelSession`, `Level1Layout` / `Level2Layout` / `Level3Layout`, `LevelPropDump` → `LevelDumps/Level{N}.txt`, `Data/LevelSpawnConfig`, `Resources/Level{N}Spawns` |
 | Props | `ResourcePickup` (dynamic RB; collides with floors/walls/one-ways like Carl; `SetWindVelocityX`/`Y` for fans; Carl solid collision ignored so trigger collect still works), `SpringPad`, `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall` (`hideButton`), `LinkedWallButton`, `Spikes` (`faceDown`), `PoweredFan` (Left/Right/Up), `PowerButton`, `IPowerable` |
 | UI / audio | `MainMenuController` (Rules icons = same `UI/Icon_Oil` / `UI/Icon_Battery`), `MenuUi`, `ResourceHud` (battery meter: energy fill, oil color), `LoseOverlay` (restart = active scene name), `GameMusic`, `GameSfx` (procedural power click + fan hum), `GameAudioSettings` |
 | Visual helpers | `GameSprites` (+ `Triangle` for drag arrows), `SpriteQuad` — procedural props use `GameSprites.White` (never null material); `AspectRatioCamera` + `CarlCameraFollow` (vertical smooth chase, Carl ~1/3 up screen) |
@@ -50,6 +52,7 @@ Prefer this over codebase exploration. Open specific files only when editing the
 - **Flush / under-foot placement:** Anything Carl must stand on or trigger from the floor (springs, spikes, ground fans, etc.) must be placed **in or below** the walk surface — tops flush with the floor top (or within step-up). Sitting the collider on top of the ground makes it a wall Carl bumps, not a pad he mounts. Spawn position is usually the prop **center**, not its top.
 - **Rotation-ready props:** New world props/devices should support facing/rotation (at least the axes the design needs) unless they are explicit exceptions — e.g. Carl and oil/battery pickups stay upright. Prefer a facing enum / spawn param over hard-coding one orientation.
 - **Add pickups, don't relocate them:** When asked to put oil/energy (or any pickup) somewhere in a level that already has one, **spawn an additional pickup**. Leave existing ones where they are unless explicitly told to remove or move them.
+- **Level prop dumps:** After changing a level’s layout/spawns, have the user Play that level once, then read `LevelDumps/Level{N}.txt` (e.g. `LevelDumps/Level3.txt`) for live positions, bounds, fan facing, button parents/targets, pickups, etc. Written by `LevelPropDump` on Play — **overwrites** that level’s file each run (does not append). Authored spawn assets are still the source of truth for edits; the dump verifies what actually appeared.
 
 ## Sprite / texture metas (common B&W / white-box bug)
 - If sprites render **grayscale/B&W** or Console shows `Failed to convert … to a unsigned 32 bit int` on a `.png.meta`, the `swizzle:` field is wrong.
