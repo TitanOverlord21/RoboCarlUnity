@@ -21,7 +21,7 @@ public class GameDirector : MonoBehaviour
 
     void Start()
     {
-        if (FindFirstObjectByType<CarlResources>() != null)
+        if (FindAnyObjectByType<CarlResources>() != null)
             return;
 
         ResourcePickup.Spawn(PickupType.Oil, new Vector2(-1.8f, -3.52f));
@@ -33,7 +33,7 @@ public class GameDirector : MonoBehaviour
         if (level2Config != null)
             spawnConfig = level2Config;
 
-        var carl = FindFirstObjectByType<CarlResources>();
+        var carl = FindAnyObjectByType<CarlResources>();
         if (carl != null && level2Config != null)
             carl.SetSpawnConfig(level2Config);
     }
@@ -102,7 +102,7 @@ public class GameDirector : MonoBehaviour
         if (spawnConfig != null)
             return spawnConfig;
 
-        var carl = FindFirstObjectByType<CarlResources>();
+        var carl = FindAnyObjectByType<CarlResources>();
         return carl != null ? carl.SpawnConfig : null;
     }
 }

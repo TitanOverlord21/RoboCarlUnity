@@ -28,7 +28,7 @@ public static class Level2Layout
                 renderer.color = Color.black;
         }
 
-        var director = Object.FindFirstObjectByType<GameDirector>();
+        var director = Object.FindAnyObjectByType<GameDirector>();
         if (director != null)
             director.ConfigureForLevel2(Resources.Load<LevelSpawnConfig>(Level2SpawnResource));
     }

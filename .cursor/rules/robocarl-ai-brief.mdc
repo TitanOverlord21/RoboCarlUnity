@@ -25,6 +25,7 @@ Prefer this over codebase exploration. Open specific files only when editing the
 - Ground spring ~(1, -3.975), size 1.2×0.35 — **top flush with floor top**.
 - WinLine Y = `WinLine.DefaultHeight` (**1.31**), full width.
 - Spring tops must be walkable from the surface Carl is on (flush or within step-up ~20% of Carl height). Spawn position is the spring **center**, not the top.
+- **Spring side-stuck:** Flush springs are solid boxes; after Carl stops against one (e.g. blocked by a wall), physics can keep him on a **side** contact (`normal.y ≈ 0`) so the pad never fires and feels like a wall. `SpringPad` also mounts when Carl is grounded with feet at the pad top; `TryStepUp` allows ~0 flush lifts. Keep both if changing spring/step logic.
 - One-way platforms: thin lighter deck + corner supports; `PlatformEffector2D`. Solid for LOS (elevated pickups hidden from below). Ignored by start `SnapFeetToGround` so Carl doesn't spawn on a deck above him.
 - Spikes: side hit → 25° knockback away (vx preserved; ground-brake disabled during knockback) + 1s grounded decision lock after settle; top hit → MainMenu. Not treated as ground; LOS ignores them.
 
@@ -42,6 +43,7 @@ Prefer this over codebase exploration. Open specific files only when editing the
 - New interactables: build visual in code + Rules entry + `LevelSpawnConfig` if level-driven
 - **Do not regenerate `.meta` GUIDs** — hand-assigned; breaks SO/scene refs
 - Art: Carl PNGs via `Resources/CarlAppearance`; UI icons `Resources/UI/`. `*.png`/`*.wav` are normal Git blobs (not LFS)
+- **Leave the Console clean** after every update session — no errors or CS0618 warnings. Fix the cause (e.g. use `FindAnyObjectByType` not obsolete `FindFirstObjectByType`), never just clear the log.
 
 ## Sprite / texture metas (common B&W / white-box bug)
 - If sprites render **grayscale/B&W** or Console shows `Failed to convert … to a unsigned 32 bit int` on a `.png.meta`, the `swizzle:` field is wrong.

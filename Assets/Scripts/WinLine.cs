@@ -20,7 +20,7 @@ public class WinLine : MonoBehaviour
 
     public static WinLine EnsureExists(float y = DefaultHeight)
     {
-        var existing = FindFirstObjectByType<WinLine>();
+        var existing = FindAnyObjectByType<WinLine>();
         if (existing != null)
             return existing;
 
