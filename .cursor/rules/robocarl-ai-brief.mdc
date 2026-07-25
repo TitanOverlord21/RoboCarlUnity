@@ -37,7 +37,7 @@ Prefer this over codebase exploration. Open specific files only when editing the
 |------|-------|
 | Carl | `CarlResources`, `CarlLocomotion` (`AddExternalVelocityX` for fans), `CarlPickupChaser`, `CarlVisual`, `CarlSparkEffect` |
 | Level | `GameDirector` (spawn walls/button walls/platforms/springs/spikes), `LevelSession`, `Level2Layout`, `Level3Layout`, `Data/LevelSpawnConfig` |
-| Props | `ResourcePickup` (oil/battery sprites from `Resources/UI/Icon_*`, `Nudge` for fans), `SpringPad`, `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall`, `LinkedWallButton`, `Spikes`, `PoweredFan`, `PowerButton`, `IPowerable` |
+| Props | `ResourcePickup` (dynamic RB; collides with floors/walls/one-ways like Carl; `SetWindVelocityX` for fans; Carl solid collision ignored so trigger collect still works), `SpringPad`, `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall`, `LinkedWallButton`, `Spikes`, `PoweredFan`, `PowerButton`, `IPowerable` |
 | UI / audio | `MainMenuController` (Rules icons = same `UI/Icon_Oil` / `UI/Icon_Battery`), `MenuUi`, `ResourceHud` (battery meter: energy fill, oil color), `LoseOverlay` (restart = active scene name), `GameMusic`, `GameSfx` (procedural power click + fan hum), `GameAudioSettings` |
 | Visual helpers | `GameSprites` (+ `Triangle` for drag arrows), `SpriteQuad` — procedural props use `GameSprites.White` (never null material); `AspectRatioCamera` + `CarlCameraFollow` (vertical smooth chase, Carl ~1/3 up screen) |
 

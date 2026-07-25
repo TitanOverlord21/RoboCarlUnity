@@ -128,7 +128,7 @@ public class PoweredFan : MonoBehaviour, IPowerable
                 origin,
                 windSign,
                 halfH,
-                speed => pickup.Nudge(new Vector2(speed * Time.fixedDeltaTime, 0f)));
+                speed => pickup.SetWindVelocityX(speed));
         }
     }
 
