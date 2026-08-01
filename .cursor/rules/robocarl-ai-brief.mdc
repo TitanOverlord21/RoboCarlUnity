@@ -8,40 +8,51 @@ alwaysApply: true
 Prefer this over codebase exploration. Open specific files only when editing them. **Update this rule** when levels, systems, or folder layout change.
 
 ## Game
-2D URP portrait puzzle, playfield **9×19.5** (`AspectRatioCamera`). Player does **not** control Carl — Carl walks to closest **LOS-visible** oil/battery; player uses **draggable** or **button** walls. Energy drains ~100s idle / ~25s walking (same pool); oil drains with walk. Energy 0 → lose. WinLine → MainMenu.
+2D URP portrait puzzle, playfield **9×19.5** (`AspectRatioCamera`). Player does **not** control Carl — Carl walks to closest **LOS-visible** oil/battery; player uses **draggable** or **button** walls, plus **power buttons** for devices. Energy drains ~100s idle / ~25s walking (same pool); oil drains with walk. Energy 0 → lose. WinLine → MainMenu.
 
 ## Levels
+Shared base scene only: `SampleScene` (split floors, L1 ground Spring, WinLine, Carl). Each level applies its own `LevelNLayout` + `Resources/LevelNSpawns` — keep those assets separate; do not assume elevated L1 props are “L2 leftovers.”
+
 | Level | Path | Notes |
 |------:|------|-------|
-| 1 | `LevelSession=1` → `SampleScene` | Scene: floors, ground Spring, WinLine, Carl. Spawns from `Resources/DefaultLevelSpawns` |
-| 2 | `LevelSession=2` → **same** `SampleScene` | Full floor; keep WinLine. Keeps right ground battery, spikes, `DraggableWall`. Adds left battery+spring, one-way platform, `ButtonWall` gate, platform oil/spring/battery |
+| 1 | `LevelSession=1` → `SampleScene` | `Level1Layout` + `Level1Spawns`: ground oil + ground battery; one-way + platform spring + platform battery. Scene keeps floors + ground Spring + WinLine + Carl |
+| 2 | `LevelSession=2` → **same** `SampleScene` | `Level2Layout` (full floor, strip scene Spring) + `Level2Spawns`: left battery+spring, right ground battery+spikes, one-way, platform oil/spring/battery, `DraggableWall`, `ButtonWall` |
+| 3 | `LevelSession=3` → **same** `SampleScene` | `Level3Layout` + `Level3Spawns` (+ fans/buttons in layout code). Buttonless dual doors + `LinkedWallButton`; side springs/one-ways; left ceiling spikes; upward fan under right one-way; side fans |
 
-- Menu levels 1–2 only (`MainMenuController`). Play Mode starts on `MainMenu`.
+- Menu levels 1–3 only (`MainMenuController`). Play Mode starts on `MainMenu`.
 - **`Level2.unity` is unused** — not the L2 runtime path.
-- `LevelSpawnConfig`: pickups, walls, buttonWalls, platforms, springs, spikes. Prefer editing those assets over `.unity` YAML.
+- `LevelSpawnConfig`: pickups, walls, buttonWalls, platforms, springs, spikes. Prefer editing the matching `LevelNSpawns` asset over `.unity` YAML. Fans/power buttons spawned from `Level3Layout` (need live refs for wires).
 
 ## L1 anchors (SampleScene)
 - Floor Y **-3.84** (thickness **0.08**, black). Carl start ~(0, **-3.25**) — ⅓ up screen with camera at y=0.
 - Ground spring ~(1, -3.975), size 1.2×0.35 — **top flush with floor top**.
 - WinLine Y = `WinLine.DefaultHeight` (**1.31**), full width.
 - Spring tops must be walkable from the surface Carl is on (flush or within step-up ~20% of Carl height). Spawn position is the spring **center**, not the top.
+- **Spring side-stuck:** Flush springs are solid boxes; after Carl stops against one (e.g. blocked by a wall), physics can keep him on a **side** contact (`normal.y ≈ 0`) so the pad never fires and feels like a wall. `SpringPad` also mounts when Carl is grounded with feet at the pad top; `TryStepUp` allows ~0 flush lifts. Keep both if changing spring/step logic.
 - One-way platforms: thin lighter deck + corner supports; `PlatformEffector2D`. Solid for LOS (elevated pickups hidden from below). Ignored by start `SnapFeetToGround` so Carl doesn't spawn on a deck above him.
-- Spikes: side hit → 25° knockback away (vx preserved; ground-brake disabled during knockback) + 1s grounded decision lock after settle; top hit → MainMenu. Not treated as ground; LOS ignores them.
+- Spikes: side hit → 25° knockback away (vx preserved; ground-brake disabled during knockback) + 1s grounded decision lock after settle; pointed-face hit → MainMenu. `faceDown` = ceiling spikes (tips down). Not treated as ground; LOS ignores them.
+- Fans (`PoweredFan` / `IPowerable`): sprites `Resources/Props/Prop_FanHousing` + `Prop_FanBlades` (true alpha — never ship AI PNGs with baked checkerboard “transparency”). Rules card uses `Prop_FanRules` (housing+blades composite). Powered by `PowerButton`. Facing: Left/Right/Up. On → blades spin + wind streaks; hum while on-camera. Pushes Carl + oil/battery with distance falloff (horizontal adds vx; upward sets vy). **Wind force + streaks are LOS-blocked by solids** (walls, floors, springs, etc.) but **not** by `OneWayPlatform` (wind passes through like Carl rising through a one-way).
+- `LinkedWallButton`: one press triggers `ButtonWall.TryTriggerToggle()` on each linked door from its own current position. `ButtonWall` can omit its own button (`hideButton` / `showButton: false`) so only the linked control works.
 
 ## Scripts (`Assets/Scripts/`)
 | Area | Files |
 |------|-------|
-| Carl | `CarlResources`, `CarlLocomotion`, `CarlPickupChaser`, `CarlVisual`, `CarlSparkEffect` |
-| Level | `GameDirector` (spawn walls/button walls/platforms/springs/spikes), `LevelSession`, `Level2Layout`, `Data/LevelSpawnConfig` |
-| Props | `ResourcePickup` (oil/battery sprites from `Resources/UI/Icon_*`, same collider/restore gameplay), `SpringPad`, `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall`, `Spikes` |
-| UI / audio | `MainMenuController` (Rules icons = same `UI/Icon_Oil` / `UI/Icon_Battery`), `MenuUi`, `ResourceHud` (battery meter: energy fill, oil color), `LoseOverlay` (restart = active scene name), `GameMusic`, `GameSfx`, `GameAudioSettings` |
-| Visual helpers | `GameSprites`, `SpriteQuad` — procedural props use `GameSprites.White` (never null material); `AspectRatioCamera` + `CarlCameraFollow` (vertical smooth chase, Carl ~1/3 up screen) |
+| Carl | `CarlResources`, `CarlLocomotion` (`AddExternalVelocityX` / `SetExternalVelocityY` for fans), `CarlPickupChaser`, `CarlVisual`, `CarlSparkEffect` |
+| Level | `GameDirector` (spawn walls/button walls/platforms/springs/spikes), `LevelSession`, `Level1Layout` / `Level2Layout` / `Level3Layout`, `LevelPropDump` → `LevelDumps/Level{N}.txt`, `Data/LevelSpawnConfig`, `Resources/Level{N}Spawns` |
+| Props | `ResourcePickup` (dynamic RB; collides with floors/walls/one-ways like Carl; `SetWindVelocityX`/`Y` for fans; Carl solid collision ignored so trigger collect still works), `SpringPad`, `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall` (`hideButton`), `LinkedWallButton`, `Spikes` (`faceDown`), `PoweredFan` (Left/Right/Up), `PowerButton`, `IPowerable` |
+| UI / audio | `MainMenuController` (Rules icons = same `UI/Icon_Oil` / `UI/Icon_Battery`), `MenuUi`, `ResourceHud` (battery meter: energy fill, oil color), `LoseOverlay` (restart = active scene name), `GameMusic`, `GameSfx` (procedural power click + fan hum), `GameAudioSettings` |
+| Visual helpers | `GameSprites` (+ `Triangle` for drag arrows), `SpriteQuad` — procedural props use `GameSprites.White` (never null material); `AspectRatioCamera` + `CarlCameraFollow` (vertical smooth chase, Carl ~1/3 up screen) |
 
 ## Conventions
 - Input System **only** — no legacy `Input.*` for gameplay
 - New interactables: build visual in code + Rules entry + `LevelSpawnConfig` if level-driven
 - **Do not regenerate `.meta` GUIDs** — hand-assigned; breaks SO/scene refs
 - Art: Carl PNGs via `Resources/CarlAppearance`; UI icons `Resources/UI/`. `*.png`/`*.wav` are normal Git blobs (not LFS)
+- **Leave the Console clean** after every update session — no errors or CS0618 warnings. Fix the cause (e.g. use `FindAnyObjectByType` not obsolete `FindFirstObjectByType`), never just clear the log.
+- **Flush / under-foot placement:** Anything Carl must stand on or trigger from the floor (springs, spikes, ground fans, etc.) must be placed **in or below** the walk surface — tops flush with the floor top (or within step-up). Sitting the collider on top of the ground makes it a wall Carl bumps, not a pad he mounts. Spawn position is usually the prop **center**, not its top.
+- **Rotation-ready props:** New world props/devices should support facing/rotation (at least the axes the design needs) unless they are explicit exceptions — e.g. Carl and oil/battery pickups stay upright. Prefer a facing enum / spawn param over hard-coding one orientation.
+- **Add pickups, don't relocate them:** When asked to put oil/energy (or any pickup) somewhere in a level that already has one, **spawn an additional pickup**. Leave existing ones where they are unless explicitly told to remove or move them.
+- **Level prop dumps:** After changing a level’s layout/spawns, have the user Play that level once, then read `LevelDumps/Level{N}.txt` (e.g. `LevelDumps/Level3.txt`) for live positions, bounds, fan facing, button parents/targets, pickups, etc. Written by `LevelPropDump` on Play — **overwrites** that level’s file each run (does not append). Authored spawn assets are still the source of truth for edits; the dump verifies what actually appeared.
 
 ## Sprite / texture metas (common B&W / white-box bug)
 - If sprites render **grayscale/B&W** or Console shows `Failed to convert … to a unsigned 32 bit int` on a `.png.meta`, the `swizzle:` field is wrong.
@@ -49,13 +60,19 @@ Prefer this over codebase exploration. Open specific files only when editing the
 - **Never** write `swizzle: 00000000010000000200000003000000` (or similar hex blobs) — that fails YAML parse and breaks color channels on Carl + UI icons.
 - Prefer letting Unity rewrite texture metas after a correct import; when hand-editing, copy `swizzle` from a known-good Carl `.meta`.
 - Icons need real PNG alpha (transparent RGB should be `0,0,0,0`, not white-with-a=0). Opaque white mattes show as white boxes in Rules/world.
+- **AI image “checkerboard transparency”:** generators often bake the gray/white preview grid into RGB with full alpha. That square then rotates with spinning sprites (e.g. fan blades). Strip to real alpha or redraw procedurally before import — do not use the raw generated file.
+
+## Rules / UI geometry icons (garbled quads)
+- **Root cause:** `MenuUi.WhiteSprite` must be an **owned 1×1 RGBA texture** + `Sprite.Create`. Never build UI sprites from `Texture2D.whiteTexture` — that shared built-in frequently garbles under RectMask2D / URP.
+- **Second cause:** rotating a **non-square** `Image` rect (e.g. spike “diamonds” at 45°) shears into a mess. Prefer axis-aligned quads, or `GameSprites.Triangle` + `preserveAspect` (no fake diamonds from rotated rectangles).
+- Decorative Rules parts use `MenuUi.AddDecor` (`raycastTarget = false`).
 
 ## Layout
 ```
 Assets/Art/         source PNGs
-Assets/Resources/   Audio, UI, *Spawns, CarlAppearance
+Assets/Resources/   Audio, UI, Props, *Spawns, CarlAppearance
 Assets/Scripts/     gameplay (+ Data/)
-Assets/Scenes/      MainMenu, SampleScene (L1+L2 base), Level2 (unused)
+Assets/Scenes/      MainMenu, SampleScene (L1+L2+L3 base), Level2 (unused)
 Assets/Editor/      PlayModeStartScene
 Assets/Settings/    URP
 ```

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -10,32 +11,55 @@ public class GameDirector : MonoBehaviour
 
     void Awake()
     {
-        if (LevelSession.SelectedLevel == 2)
-            Level2Layout.Apply();
+        // Each level binds its own spawn asset; scene objects are only the shared base.
+        switch (LevelSession.SelectedLevel)
+        {
+            case 2:
+                Level2Layout.Apply();
+                break;
+            case 3:
+                Level3Layout.Apply();
+                break;
+            default:
+                Level1Layout.Apply();
+                break;
+        }
 
         if (!disableWinLine)
             WinLine.EnsureExists();
 
         SpawnLevelProps();
+
+        if (LevelSession.SelectedLevel == 3)
+            Level3Layout.SpawnDoorLinkButton();
     }
 
     void Start()
     {
-        if (FindFirstObjectByType<CarlResources>() != null)
-            return;
+        if (FindAnyObjectByType<CarlResources>() == null)
+        {
+            ResourcePickup.Spawn(PickupType.Oil, new Vector2(-1.8f, -3.52f));
+            ResourcePickup.Spawn(PickupType.Energy, new Vector2(3.7f, -3.52f));
+        }
 
-        ResourcePickup.Spawn(PickupType.Oil, new Vector2(-1.8f, -3.52f));
-        ResourcePickup.Spawn(PickupType.Energy, new Vector2(3.7f, -3.52f));
+        // Pickups spawn in CarlResources.Start; wait one frame so the dump is complete.
+        StartCoroutine(WriteLevelDumpNextFrame());
     }
 
-    public void ConfigureForLevel2(LevelSpawnConfig level2Config)
+    IEnumerator WriteLevelDumpNextFrame()
     {
-        if (level2Config != null)
-            spawnConfig = level2Config;
+        yield return null;
+        LevelPropDump.WriteActiveLevel();
+    }
 
-        var carl = FindFirstObjectByType<CarlResources>();
-        if (carl != null && level2Config != null)
-            carl.SetSpawnConfig(level2Config);
+    public void ConfigureSpawnConfig(LevelSpawnConfig config)
+    {
+        if (config != null)
+            spawnConfig = config;
+
+        var carl = FindAnyObjectByType<CarlResources>();
+        if (carl != null && config != null)
+            carl.SetSpawnConfig(config);
     }
 
     void SpawnLevelProps()
@@ -66,7 +90,8 @@ public class GameDirector : MonoBehaviour
                     entry.size,
                     entry.dragPositive,
                     entry.dragNegative,
-                    entry.vertical);
+                    entry.vertical,
+                    showButton: !entry.hideButton);
             }
         }
 
@@ -92,7 +117,7 @@ public class GameDirector : MonoBehaviour
             {
                 float width = entry.width > 0f ? entry.width : 1.0f;
                 float height = entry.height > 0f ? entry.height : 0.42f;
-                Spikes.Spawn(entry.position, width, height);
+                Spikes.Spawn(entry.position, width, height, faceDown: entry.faceDown);
             }
         }
     }
@@ -102,7 +127,7 @@ public class GameDirector : MonoBehaviour
         if (spawnConfig != null)
             return spawnConfig;
 
-        var carl = FindFirstObjectByType<CarlResources>();
+        var carl = FindAnyObjectByType<CarlResources>();
         return carl != null ? carl.SpawnConfig : null;
     }
 }

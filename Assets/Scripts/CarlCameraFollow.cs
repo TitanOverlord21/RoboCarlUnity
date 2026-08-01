@@ -37,7 +37,7 @@ public class CarlCameraFollow : MonoBehaviour
             return true;
         }
 
-        var locomotion = FindFirstObjectByType<CarlLocomotion>();
+        var locomotion = FindAnyObjectByType<CarlLocomotion>();
         if (locomotion == null)
         {
             carl = null;

@@ -110,7 +110,7 @@ public class MainMenuController : MonoBehaviour
         for (var i = 0; i < LevelCount; i++)
         {
             int level = i + 1;
-            bool available = level <= 2;
+            bool available = level <= 3;
             var color = available ? AccentColor : MutedColor;
             string label = available ? $"Level {level}" : $"Level {level}\nSoon";
 
@@ -384,6 +384,20 @@ public class MainMenuController : MonoBehaviour
             },
             new RuleEntry
             {
+                Title = "Power Button",
+                Icon = null,
+                IconTint = new Color(0.95f, 0.18f, 0.18f, 1f),
+                Body = "A red switch on a small pedestal with teal terminals. Tap it to power everything it is connected to — by a green wire, or by sitting on/next to a device. One button can feed several devices."
+            },
+            new RuleEntry
+            {
+                Title = "Fan",
+                Icon = null,
+                IconTint = new Color(0.55f, 0.85f, 1f, 1f),
+                Body = "When powered, blades spin and wind blows out the front. The breeze pushes Carl, oil cans, and batteries — stronger the closer they are. Turns on with a click, then hums while it is on screen."
+            },
+            new RuleEntry
+            {
                 Title = "Spikes",
                 Icon = null,
                 IconTint = new Color(0.72f, 0.72f, 0.76f, 1f),
@@ -412,6 +426,14 @@ public class MainMenuController : MonoBehaviour
         {
             CreateButtonWallRuleIcon(card.transform);
         }
+        else if (entry.Title == "Power Button")
+        {
+            CreatePowerButtonRuleIcon(card.transform);
+        }
+        else if (entry.Title == "Fan")
+        {
+            CreateFanRuleIcon(card.transform);
+        }
         else if (entry.Title == "Spikes")
         {
             CreateSpikesRuleIcon(card.transform);
@@ -422,15 +444,14 @@ public class MainMenuController : MonoBehaviour
         }
         else
         {
-            var iconObject = MenuUi.Create("Icon", card.transform);
             bool isLineIcon = entry.Title == "Win Line";
+            var iconObject = MenuUi.Create("Icon", card.transform);
             if (isLineIcon)
                 MenuUi.SetAnchors(iconObject.GetComponent<RectTransform>(), new Vector2(0.12f, 0.52f), new Vector2(0.88f, 0.68f));
             else
-                MenuUi.SetAnchors(iconObject.GetComponent<RectTransform>(), new Vector2(0.1f, 0.28f), new Vector2(0.9f, 0.92f));
+                MenuUi.SetAnchors(iconObject.GetComponent<RectTransform>(), new Vector2(0.12f, 0.30f), new Vector2(0.88f, 0.92f));
 
-            var iconImage = MenuUi.AddImage(iconObject, entry.IconTint, entry.Icon);
-            iconImage.preserveAspect = !isLineIcon;
+            var iconImage = MenuUi.AddDecor(iconObject, entry.IconTint, entry.Icon, preserveAspect: !isLineIcon);
             if (entry.Icon == null && entry.IconTint.a <= 0f)
                 iconImage.color = new Color(0.4f, 0.45f, 0.5f, 1f);
         }
@@ -442,123 +463,161 @@ public class MainMenuController : MonoBehaviour
 
     void CreateSpringRuleIcon(Transform card)
     {
-        var iconRoot = MenuUi.Create("Icon", card);
-        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), new Vector2(0.18f, 0.30f), new Vector2(0.82f, 0.92f));
+        var iconRoot = CreateRuleIconRoot(card, new Vector2(0.20f, 0.30f), new Vector2(0.80f, 0.92f));
 
-        AddSpringCoilBar(iconRoot.transform, 0.02f, 0.14f, 0.95f, new Color(0.45f, 0.28f, 0.12f, 1f));
-        AddSpringCoilBar(iconRoot.transform, 0.18f, 0.32f, 0.82f, new Color(0.7f, 0.45f, 0.18f, 1f));
-        AddSpringCoilBar(iconRoot.transform, 0.36f, 0.50f, 0.78f, new Color(0.78f, 0.52f, 0.22f, 1f));
-        AddSpringCoilBar(iconRoot.transform, 0.54f, 0.68f, 0.82f, new Color(0.7f, 0.45f, 0.18f, 1f));
-        AddSpringCoilBar(iconRoot.transform, 0.72f, 0.88f, 0.90f, new Color(0.35f, 0.55f, 0.75f, 1f));
+        AddSpringCoilBar(iconRoot, 0.04f, 0.16f, 0.92f, new Color(0.45f, 0.28f, 0.12f, 1f));
+        AddSpringCoilBar(iconRoot, 0.20f, 0.32f, 0.78f, new Color(0.7f, 0.45f, 0.18f, 1f));
+        AddSpringCoilBar(iconRoot, 0.36f, 0.48f, 0.72f, new Color(0.78f, 0.52f, 0.22f, 1f));
+        AddSpringCoilBar(iconRoot, 0.52f, 0.64f, 0.78f, new Color(0.7f, 0.45f, 0.18f, 1f));
+        AddSpringCoilBar(iconRoot, 0.70f, 0.86f, 0.88f, new Color(0.35f, 0.55f, 0.75f, 1f));
     }
 
     void CreatePlatformRuleIcon(Transform card)
     {
-        var iconRoot = MenuUi.Create("Icon", card);
-        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), new Vector2(0.12f, 0.34f), new Vector2(0.88f, 0.90f));
+        var iconRoot = CreateRuleIconRoot(card, new Vector2(0.12f, 0.34f), new Vector2(0.88f, 0.90f));
 
-        var deck = MenuUi.Create("Deck", iconRoot.transform);
-        MenuUi.SetAnchors(deck.GetComponent<RectTransform>(), new Vector2(0.05f, 0.62f), new Vector2(0.95f, 0.82f));
-        MenuUi.AddImage(deck, new Color(0.28f, 0.28f, 0.32f, 1f));
-
-        var left = MenuUi.Create("LeftSupport", iconRoot.transform);
-        MenuUi.SetAnchors(left.GetComponent<RectTransform>(), new Vector2(0.08f, 0.18f), new Vector2(0.32f, 0.62f));
-        left.transform.localRotation = Quaternion.Euler(0f, 0f, 28f);
-        MenuUi.AddImage(left, new Color(0.22f, 0.22f, 0.26f, 1f));
-
-        var right = MenuUi.Create("RightSupport", iconRoot.transform);
-        MenuUi.SetAnchors(right.GetComponent<RectTransform>(), new Vector2(0.68f, 0.18f), new Vector2(0.92f, 0.62f));
-        right.transform.localRotation = Quaternion.Euler(0f, 0f, -28f);
-        MenuUi.AddImage(right, new Color(0.22f, 0.22f, 0.26f, 1f));
+        // Axis-aligned braces only — rotated non-square UI quads shear badly.
+        AddRuleQuad(iconRoot, "Deck", new Vector2(0.06f, 0.64f), new Vector2(0.94f, 0.82f), new Color(0.28f, 0.28f, 0.32f, 1f));
+        AddRuleQuad(iconRoot, "LeftPost", new Vector2(0.12f, 0.18f), new Vector2(0.22f, 0.64f), new Color(0.22f, 0.22f, 0.26f, 1f));
+        AddRuleQuad(iconRoot, "RightPost", new Vector2(0.78f, 0.18f), new Vector2(0.88f, 0.64f), new Color(0.22f, 0.22f, 0.26f, 1f));
+        AddRuleQuad(iconRoot, "LeftFoot", new Vector2(0.08f, 0.14f), new Vector2(0.30f, 0.24f), new Color(0.22f, 0.22f, 0.26f, 1f));
+        AddRuleQuad(iconRoot, "RightFoot", new Vector2(0.70f, 0.14f), new Vector2(0.92f, 0.24f), new Color(0.22f, 0.22f, 0.26f, 1f));
     }
 
     void CreateWallRuleIcon(Transform card)
     {
-        var iconRoot = MenuUi.Create("Icon", card);
-        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), new Vector2(0.34f, 0.28f), new Vector2(0.66f, 0.92f));
+        var iconRoot = CreateRuleIconRoot(card, new Vector2(0.34f, 0.28f), new Vector2(0.66f, 0.92f));
 
-        var plate = MenuUi.Create("Plate", iconRoot.transform);
-        MenuUi.StretchFull(plate.GetComponent<RectTransform>());
-        MenuUi.AddImage(plate, new Color(0.55f, 0.58f, 0.62f, 1f));
+        AddRuleQuad(iconRoot, "Plate", Vector2.zero, Vector2.one, new Color(0.55f, 0.58f, 0.62f, 1f));
+        AddWallBolt(iconRoot, 0.16f, 0.78f);
+        AddWallBolt(iconRoot, 0.16f, 0.48f);
+        AddWallBolt(iconRoot, 0.16f, 0.18f);
+        AddWallBolt(iconRoot, 0.68f, 0.78f);
+        AddWallBolt(iconRoot, 0.68f, 0.48f);
+        AddWallBolt(iconRoot, 0.68f, 0.18f);
 
-        AddWallBolt(iconRoot.transform, 0.18f, 0.78f);
-        AddWallBolt(iconRoot.transform, 0.18f, 0.48f);
-        AddWallBolt(iconRoot.transform, 0.18f, 0.18f);
-        AddWallBolt(iconRoot.transform, 0.62f, 0.78f);
-        AddWallBolt(iconRoot.transform, 0.62f, 0.48f);
-        AddWallBolt(iconRoot.transform, 0.62f, 0.18f);
+        AddRuleQuad(iconRoot, "ArrowShaft", new Vector2(0.40f, 0.28f), new Vector2(0.60f, 0.72f), new Color(1f, 0.88f, 0.15f, 1f));
+        AddRuleSprite(iconRoot, "ArrowUp", new Vector2(0.30f, 0.70f), new Vector2(0.70f, 0.96f), GameSprites.Triangle, new Color(1f, 0.88f, 0.15f, 1f));
+        AddRuleSprite(iconRoot, "ArrowDown", new Vector2(0.30f, 0.04f), new Vector2(0.70f, 0.30f), GameSprites.Triangle, new Color(1f, 0.88f, 0.15f, 1f), zRotation: 180f);
     }
 
     void CreateButtonWallRuleIcon(Transform card)
     {
-        var iconRoot = MenuUi.Create("Icon", card);
-        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), new Vector2(0.34f, 0.28f), new Vector2(0.66f, 0.92f));
+        var iconRoot = CreateRuleIconRoot(card, new Vector2(0.34f, 0.28f), new Vector2(0.66f, 0.92f));
 
-        var plate = MenuUi.Create("Plate", iconRoot.transform);
-        MenuUi.StretchFull(plate.GetComponent<RectTransform>());
-        MenuUi.AddImage(plate, new Color(0.42f, 0.48f, 0.58f, 1f));
+        AddRuleQuad(iconRoot, "Plate", Vector2.zero, Vector2.one, new Color(0.42f, 0.48f, 0.58f, 1f));
+        AddRuleQuad(iconRoot, "RailL", new Vector2(0.12f, 0.12f), new Vector2(0.24f, 0.88f), new Color(0.35f, 0.85f, 0.95f, 1f));
+        AddRuleQuad(iconRoot, "RailR", new Vector2(0.76f, 0.12f), new Vector2(0.88f, 0.88f), new Color(0.35f, 0.85f, 0.95f, 1f));
+        AddRuleQuad(iconRoot, "ButtonRim", new Vector2(0.22f, 0.34f), new Vector2(0.78f, 0.70f), new Color(0.35f, 0.08f, 0.08f, 1f));
+        AddRuleQuad(iconRoot, "ButtonFace", new Vector2(0.30f, 0.40f), new Vector2(0.70f, 0.64f), new Color(0.95f, 0.18f, 0.18f, 1f));
+    }
 
-        var railL = MenuUi.Create("RailL", iconRoot.transform);
-        MenuUi.SetAnchors(railL.GetComponent<RectTransform>(), new Vector2(0.12f, 0.12f), new Vector2(0.22f, 0.88f));
-        MenuUi.AddImage(railL, new Color(0.35f, 0.85f, 0.95f, 1f));
+    void CreatePowerButtonRuleIcon(Transform card)
+    {
+        var iconRoot = CreateRuleIconRoot(card, new Vector2(0.28f, 0.30f), new Vector2(0.72f, 0.92f));
 
-        var railR = MenuUi.Create("RailR", iconRoot.transform);
-        MenuUi.SetAnchors(railR.GetComponent<RectTransform>(), new Vector2(0.78f, 0.12f), new Vector2(0.88f, 0.88f));
-        MenuUi.AddImage(railR, new Color(0.35f, 0.85f, 0.95f, 1f));
+        AddRuleQuad(iconRoot, "Pedestal", Vector2.zero, Vector2.one, new Color(0.32f, 0.36f, 0.44f, 1f));
+        AddRuleQuad(iconRoot, "TermL", new Vector2(0.08f, 0.10f), new Vector2(0.28f, 0.28f), new Color(0.2f, 0.85f, 0.75f, 1f));
+        AddRuleQuad(iconRoot, "TermR", new Vector2(0.72f, 0.10f), new Vector2(0.92f, 0.28f), new Color(0.2f, 0.85f, 0.75f, 1f));
+        AddRuleQuad(iconRoot, "ButtonRim", new Vector2(0.18f, 0.36f), new Vector2(0.82f, 0.86f), new Color(0.35f, 0.08f, 0.08f, 1f));
+        AddRuleQuad(iconRoot, "ButtonFace", new Vector2(0.28f, 0.44f), new Vector2(0.72f, 0.78f), new Color(0.95f, 0.18f, 0.18f, 1f));
+    }
 
-        var rim = MenuUi.Create("ButtonRim", iconRoot.transform);
-        MenuUi.SetAnchors(rim.GetComponent<RectTransform>(), new Vector2(0.18f, 0.32f), new Vector2(0.82f, 0.72f));
-        MenuUi.AddImage(rim, new Color(0.35f, 0.08f, 0.08f, 1f));
+    void CreateFanRuleIcon(Transform card)
+    {
+        var iconRoot = CreateRuleIconRoot(card, new Vector2(0.10f, 0.28f), new Vector2(0.90f, 0.92f));
+        // Composite includes housing + blades (Prop_FanRules). Fallback layers if missing.
+        var rulesSprite = Resources.Load<Sprite>("Props/Prop_FanRules");
+        if (rulesSprite != null)
+        {
+            var icon = MenuUi.Create("Fan", iconRoot);
+            MenuUi.StretchFull(icon.GetComponent<RectTransform>());
+            MenuUi.AddDecor(icon, Color.white, rulesSprite, preserveAspect: true);
+            return;
+        }
 
-        var face = MenuUi.Create("ButtonFace", iconRoot.transform);
-        MenuUi.SetAnchors(face.GetComponent<RectTransform>(), new Vector2(0.28f, 0.38f), new Vector2(0.72f, 0.66f));
-        MenuUi.AddImage(face, new Color(0.95f, 0.18f, 0.18f, 1f));
+        var housingSprite = Resources.Load<Sprite>("Props/Prop_FanHousing");
+        var bladesSprite = Resources.Load<Sprite>("Props/Prop_FanBlades");
+        var housing = MenuUi.Create("Housing", iconRoot);
+        MenuUi.StretchFull(housing.GetComponent<RectTransform>());
+        var housingImage = MenuUi.AddDecor(housing, Color.white, housingSprite, preserveAspect: true);
+        if (housingSprite == null)
+            housingImage.color = new Color(0.38f, 0.42f, 0.5f, 1f);
+
+        if (bladesSprite == null)
+            return;
+
+        var blades = MenuUi.Create("Blades", iconRoot);
+        MenuUi.SetAnchors(blades.GetComponent<RectTransform>(), new Vector2(0.42f, 0.28f), new Vector2(0.88f, 0.78f));
+        MenuUi.AddDecor(blades, Color.white, bladesSprite, preserveAspect: true);
     }
 
     void CreateSpikesRuleIcon(Transform card)
     {
-        var iconRoot = MenuUi.Create("Icon", card);
-        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), new Vector2(0.16f, 0.30f), new Vector2(0.84f, 0.90f));
+        var iconRoot = CreateRuleIconRoot(card, new Vector2(0.14f, 0.30f), new Vector2(0.86f, 0.90f));
 
-        var bas = MenuUi.Create("Base", iconRoot.transform);
-        MenuUi.SetAnchors(bas.GetComponent<RectTransform>(), new Vector2(0.05f, 0.08f), new Vector2(0.95f, 0.28f));
-        MenuUi.AddImage(bas, new Color(0.22f, 0.2f, 0.22f, 1f));
-
-        AddSpikeTooth(iconRoot.transform, 0.08f);
-        AddSpikeTooth(iconRoot.transform, 0.36f);
-        AddSpikeTooth(iconRoot.transform, 0.64f);
+        AddRuleQuad(iconRoot, "Base", new Vector2(0.05f, 0.08f), new Vector2(0.95f, 0.28f), new Color(0.22f, 0.2f, 0.22f, 1f));
+        // Triangle sprites (preserveAspect) — never rotate non-square white quads.
+        AddSpikeTooth(iconRoot, 0.18f);
+        AddSpikeTooth(iconRoot, 0.50f);
+        AddSpikeTooth(iconRoot, 0.82f);
     }
 
-    void AddSpikeTooth(Transform parent, float xMin)
+    Transform CreateRuleIconRoot(Transform card, Vector2 anchorMin, Vector2 anchorMax)
     {
-        var tooth = MenuUi.Create("Tooth", parent);
-        MenuUi.SetAnchors(
-            tooth.GetComponent<RectTransform>(),
-            new Vector2(xMin, 0.22f),
-            new Vector2(xMin + 0.28f, 0.92f));
-        tooth.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
-        MenuUi.AddImage(tooth, new Color(0.72f, 0.72f, 0.76f, 1f));
+        var iconRoot = MenuUi.Create("Icon", card);
+        MenuUi.SetAnchors(iconRoot.GetComponent<RectTransform>(), anchorMin, anchorMax);
+        return iconRoot.transform;
+    }
+
+    static void AddRuleQuad(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Color color)
+    {
+        var go = MenuUi.Create(name, parent);
+        MenuUi.SetAnchors(go.GetComponent<RectTransform>(), anchorMin, anchorMax);
+        MenuUi.AddDecor(go, color);
+    }
+
+    static void AddRuleSprite(
+        Transform parent,
+        string name,
+        Vector2 anchorMin,
+        Vector2 anchorMax,
+        Sprite sprite,
+        Color color,
+        float zRotation = 0f)
+    {
+        var go = MenuUi.Create(name, parent);
+        MenuUi.SetAnchors(go.GetComponent<RectTransform>(), anchorMin, anchorMax);
+        if (!Mathf.Approximately(zRotation, 0f))
+            go.transform.localRotation = Quaternion.Euler(0f, 0f, zRotation);
+        MenuUi.AddDecor(go, color, sprite, preserveAspect: true);
+    }
+
+    void AddSpikeTooth(Transform parent, float xCenter)
+    {
+        AddRuleSprite(
+            parent,
+            "Tooth",
+            new Vector2(xCenter - 0.14f, 0.24f),
+            new Vector2(xCenter + 0.14f, 0.94f),
+            GameSprites.Triangle,
+            new Color(0.72f, 0.72f, 0.76f, 1f));
     }
 
     void AddWallBolt(Transform parent, float xMin, float yMin)
     {
-        var bolt = MenuUi.Create("Bolt", parent);
-        MenuUi.SetAnchors(
-            bolt.GetComponent<RectTransform>(),
+        AddRuleQuad(
+            parent,
+            "Bolt",
             new Vector2(xMin, yMin),
-            new Vector2(xMin + 0.2f, yMin + 0.12f));
-        MenuUi.AddImage(bolt, new Color(0.28f, 0.3f, 0.33f, 1f));
+            new Vector2(xMin + 0.16f, yMin + 0.12f),
+            new Color(0.28f, 0.3f, 0.33f, 1f));
     }
 
     void AddSpringCoilBar(Transform parent, float yMin, float yMax, float widthFraction, Color color)
     {
         float xPad = (1f - widthFraction) * 0.5f;
-        var bar = MenuUi.Create("Coil", parent);
-        MenuUi.SetAnchors(
-            bar.GetComponent<RectTransform>(),
-            new Vector2(xPad, yMin),
-            new Vector2(1f - xPad, yMax));
-        MenuUi.AddImage(bar, color);
+        AddRuleQuad(parent, "Coil", new Vector2(xPad, yMin), new Vector2(1f - xPad, yMax), color);
     }
 
     void OnLevelSelected(int level)
@@ -575,6 +634,13 @@ public class MainMenuController : MonoBehaviour
             // Use the shared SampleScene base; Level2Layout strips L1 props and
             // spawns the draggable wall from Level2Spawns.
             LevelSession.SelectedLevel = 2;
+            SceneManager.LoadScene(Level1SceneName);
+            return;
+        }
+
+        if (level == 3)
+        {
+            LevelSession.SelectedLevel = 3;
             SceneManager.LoadScene(Level1SceneName);
             return;
         }

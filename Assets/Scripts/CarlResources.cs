@@ -17,7 +17,7 @@ public class CarlResources : MonoBehaviour
     /// <summary>Trigger radius a bit larger than Carl's body (box is 0.55 wide).</summary>
     public const float PickupRadius = 0.42f;
 
-    const string DefaultSpawnResource = "DefaultLevelSpawns";
+    const string DefaultSpawnResource = "Level1Spawns";
 
     [SerializeField] LevelSpawnConfig spawnConfig;
 

@@ -191,6 +191,33 @@ public class CarlLocomotion : MonoBehaviour
     }
 
     /// <summary>
+    /// Adds horizontal velocity after locomotion (fans). Does not drain oil.
+    /// Call from a later FixedUpdate (see PoweredFan execution order).
+    /// </summary>
+    public void AddExternalVelocityX(float velocityX)
+    {
+        if (_resources.IsGameOver || Mathf.Approximately(velocityX, 0f))
+            return;
+
+        var v = _rigidbody.linearVelocity;
+        _rigidbody.linearVelocity = new Vector2(v.x + velocityX, v.y);
+    }
+
+    /// <summary>
+    /// Sustained vertical wind from upward/downward fans. Sets Y (does not drain oil).
+    /// </summary>
+    public void SetExternalVelocityY(float velocityY)
+    {
+        if (_resources.IsGameOver)
+            return;
+
+        var v = _rigidbody.linearVelocity;
+        _rigidbody.linearVelocity = new Vector2(v.x, velocityY);
+        if (velocityY > 0.05f)
+            IsGrounded = false;
+    }
+
+    /// <summary>
     /// For future scripted movement; does not drain oil.
     /// </summary>
     public void SetForcedHorizontalVelocity(float velocityX)
@@ -307,12 +334,13 @@ public class CarlLocomotion : MonoBehaviour
             return;
 
         float stepUp = ledgeHit.point.y - feetMinY;
-        // Allow tiny lifts (flush platforms can still block via box corner overlap).
-        if (stepUp <= 0.001f || stepUp > maxStep + StepSkin)
+        // Flush ledges (e.g. spring top even with floor) can still block as a side face
+        // with ~0 step height — allow a tiny lift so Carl mounts instead of wall-stalling.
+        if (stepUp < -StepSkin || stepUp > maxStep + StepSkin)
             return;
 
         var position = _rigidbody.position;
-        position.y += stepUp + StepSkin;
+        position.y += Mathf.Max(stepUp, 0f) + StepSkin;
         _rigidbody.position = position;
         _rigidbody.linearVelocity = new Vector2(_rigidbody.linearVelocity.x, 0f);
         IsGrounded = true;

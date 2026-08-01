@@ -17,6 +17,9 @@
 /[Bb]uild/
 /[Bb]uilds/
 /[Ll]ogs/
+
+# Runtime level layout dumps (overwritten each Play; see LevelPropDump)
+/LevelDumps/*.txt
 /[Uu]ser[Ss]ettings/
 *.log
 

@@ -21,6 +21,8 @@ public class SpringPad : MonoBehaviour
     [SerializeField] float width = 1.2f;
     [SerializeField] float height = 0.35f;
 
+    public Vector2 Size => new(width, height);
+
     State _state = State.Idle;
     float _timer;
     Transform _visualRoot;
@@ -81,6 +83,34 @@ public class SpringPad : MonoBehaviour
             BeginCompress(locomotion);
             return;
         }
+
+        // Side-stuck against a flush spring reports horizontal normals only, so Carl
+        // treats the pad like a wall. If his feet are already at the pad surface, mount.
+        if (ShouldMountFromSide(locomotion))
+            BeginCompress(locomotion);
+    }
+
+    bool ShouldMountFromSide(CarlLocomotion carl)
+    {
+        if (!carl.IsGrounded)
+            return false;
+
+        var carlCollider = carl.GetComponent<Collider2D>();
+        if (carlCollider == null)
+            return false;
+
+        float feetY = carlCollider.bounds.min.y;
+        float top = GetSurfaceY(1f);
+        // Feet must be at/near the walkable top (flush platform/floor springs).
+        if (feetY < top - 0.08f || feetY > top + 0.12f)
+            return false;
+
+        // Require horizontal overlap with the pad (not a glancing far contact).
+        float padHalf = width * 0.5f;
+        float carlX = carlCollider.bounds.center.x;
+        float padX = transform.position.x;
+        float reach = carlCollider.bounds.extents.x + padHalf + 0.05f;
+        return Mathf.Abs(carlX - padX) <= reach;
     }
 
     void BeginCompress(CarlLocomotion carl)

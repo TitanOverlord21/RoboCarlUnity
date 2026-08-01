@@ -29,6 +29,8 @@ public class ButtonWall : MonoBehaviour
     [SerializeField] float dragPositive = 2f;
     [Tooltip("Max travel from the start position along the negative length axis.")]
     [SerializeField] float dragNegative = 2.5f;
+    [Tooltip("If false, no on-wall red button (linked / external trigger only).")]
+    [SerializeField] bool showButton = true;
 
     Rigidbody2D _body;
     Vector2 _startPosition;
@@ -41,12 +43,29 @@ public class ButtonWall : MonoBehaviour
     float _moveTimer;
     float _moveDuration;
 
+    public bool IsMoving => _moving;
+    public bool ShowButton => showButton;
+    public Vector2 Size => size;
+
+    /// <summary>
+    /// Starts a toggle slide from the wall's current position. No-op while busy.
+    /// Used by linked multi-door buttons; the wall's own button still works alone when shown.
+    /// </summary>
+    public bool TryTriggerToggle()
+    {
+        if (_moving)
+            return false;
+
+        return BeginToggleMove();
+    }
+
     public static ButtonWall Spawn(
         Vector2 position,
         Vector2 size,
         float dragPositive,
         float dragNegative,
-        bool vertical = true)
+        bool vertical = true,
+        bool showButton = true)
     {
         var wallObject = new GameObject("ButtonWall");
         wallObject.SetActive(false);
@@ -57,6 +76,7 @@ public class ButtonWall : MonoBehaviour
         wall.vertical = vertical;
         wall.dragPositive = Mathf.Max(0f, dragPositive);
         wall.dragNegative = Mathf.Max(0f, dragNegative);
+        wall.showButton = showButton;
         wallObject.SetActive(true);
         return wall;
     }
@@ -88,7 +108,7 @@ public class ButtonWall : MonoBehaviour
 
     void Update()
     {
-        if (_moving)
+        if (_moving || !showButton)
             return;
 
         var pointer = Pointer.current;
@@ -144,13 +164,13 @@ public class ButtonWall : MonoBehaviour
         BeginToggleMove();
     }
 
-    void BeginToggleMove()
+    bool BeginToggleMove()
     {
         float startAxis = vertical ? _startPosition.y : _startPosition.x;
         float min = startAxis - dragNegative;
         float max = startAxis + dragPositive;
         if (Mathf.Abs(max - min) < 0.001f)
-            return;
+            return false;
 
         float current = GetAxis();
         float target = _nextTargetIsMax ? max : min;
@@ -159,7 +179,7 @@ public class ButtonWall : MonoBehaviour
             _nextTargetIsMax = !_nextTargetIsMax;
             target = _nextTargetIsMax ? max : min;
             if (Mathf.Abs(current - target) < 0.02f)
-                return;
+                return false;
         }
 
         _moveFrom = current;
@@ -170,6 +190,7 @@ public class ButtonWall : MonoBehaviour
         _moving = true;
         _nextTargetIsMax = !_nextTargetIsMax;
         SetButtonBusy(true);
+        return true;
     }
 
     float GetAxis() => vertical ? _body.position.y : _body.position.x;
@@ -263,6 +284,9 @@ public class ButtonWall : MonoBehaviour
 
         for (var i = 0; i < rivetLocals.Length; i++)
             AddPlate(visualRoot, $"Rivet{i}", RivetColor, Vector2.one * rivet, rivetLocals[i], 7);
+
+        if (!showButton)
+            return;
 
         // Large center button — sized for easy mobile taps.
         float button = Mathf.Clamp(Mathf.Max(thickness * 1.15f, 0.55f), 0.5f, 0.85f);
