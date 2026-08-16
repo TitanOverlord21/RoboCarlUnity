@@ -18,17 +18,20 @@ Shared base scene only: `SampleScene` (split floors, L1 ground Spring, WinLine, 
 | 1 | `LevelSession=1` → `SampleScene` | `Level1Layout` + `Level1Spawns`: ground oil + ground battery; one-way + platform spring + platform battery. Scene keeps floors + ground Spring + WinLine + Carl |
 | 2 | `LevelSession=2` → **same** `SampleScene` | `Level2Layout` (full floor, strip scene Spring) + `Level2Spawns`: left battery+spring, right ground battery+spikes, one-way, platform oil/spring/battery, `DraggableWall`, `ButtonWall` |
 | 3 | `LevelSession=3` → **same** `SampleScene` | `Level3Layout` + `Level3Spawns` (+ fans/buttons in layout code). Buttonless dual doors + `LinkedWallButton`; side springs/one-ways; left ceiling spikes; upward fan under right one-way; side fans |
+| 4 | `LevelSession=4` → **same** `SampleScene` | `Level4Layout` (full floor, strip scene Spring + WinLine, Carl feet on start platform) + `Level4Spawns`: horizontal `DraggableWall`; right-facing spring on left; up-springs under platform; one-way above platform (WIP, no pickups/WinLine yet) |
 
-- Menu levels 1–3 only (`MainMenuController`). Play Mode starts on `MainMenu`.
+- Menu levels 1–4 only (`MainMenuController`). Play Mode starts on `MainMenu`.
 - **`Level2.unity` is unused** — not the L2 runtime path.
-- `LevelSpawnConfig`: pickups, walls, buttonWalls, platforms, springs, spikes. Prefer editing the matching `LevelNSpawns` asset over `.unity` YAML. Fans/power buttons spawned from `Level3Layout` (need live refs for wires).
+- `LevelSpawnConfig`: pickups, walls, buttonWalls, platforms, springs (`facing`: Up/Right/Left), spikes. Prefer editing the matching `LevelNSpawns` asset over `.unity` YAML. Fans/power buttons spawned from `Level3Layout` (need live refs for wires).
 
 ## L1 anchors (SampleScene)
 - Floor Y **-3.84** (thickness **0.08**, black). Carl start ~(0, **-3.25**) — ⅓ up screen with camera at y=0.
 - Ground spring ~(1, -3.975), size 1.2×0.35 — **top flush with floor top**.
 - WinLine Y = `WinLine.DefaultHeight` (**1.31**), full width.
 - Spring tops must be walkable from the surface Carl is on (flush or within step-up ~20% of Carl height). Spawn position is the spring **center**, not the top.
-- **Spring side-stuck:** Flush springs are solid boxes; after Carl stops against one (e.g. blocked by a wall), physics can keep him on a **side** contact (`normal.y ≈ 0`) so the pad never fires and feels like a wall. `SpringPad` also mounts when Carl is grounded with feet at the pad top; `TryStepUp` allows ~0 flush lifts. Keep both if changing spring/step logic.
+- **Spring facing / power:** `SpringPad.Facing` Up/Right/Left — object rotates so local +Y is the launch face; compress + launch along that axis (`CarlLocomotion.Launch`). Per-spring `launchSpeed` in `LevelSpawnConfig` (0 = `DefaultLaunchSpeed` 7.7). Sideways launches use knockback briefly so ground-brake doesn't eat vx on a platform.
+- **Spring side-stuck:** Flush upward springs are solid boxes; after Carl stops against one (e.g. blocked by a wall), physics can keep him on a **side** contact (`normal.y ≈ 0`) so the pad never fires and feels like a wall. `SpringPad` also mounts when Carl is grounded with feet at the pad top; `TryStepUp` allows ~0 flush lifts. Keep both if changing spring/step logic.
+- Horizontal `DraggableWall` (`vertical: false`) is a sideways moving platform; drag uses `MovePosition` in FixedUpdate. **Carl rides any moving ground** under his feet (`CarlLocomotion` tracks the support collider and applies its position delta each FixedUpdate) — not special-cased per prop.
 - One-way platforms: thin lighter deck + corner supports; `PlatformEffector2D`. Solid for LOS (elevated pickups hidden from below). Ignored by start `SnapFeetToGround` so Carl doesn't spawn on a deck above him.
 - Spikes: side hit → 25° knockback away (vx preserved; ground-brake disabled during knockback) + 1s grounded decision lock after settle; pointed-face hit → MainMenu. `faceDown` = ceiling spikes (tips down). Not treated as ground; LOS ignores them.
 - Fans (`PoweredFan` / `IPowerable`): sprites `Resources/Props/Prop_FanHousing` + `Prop_FanBlades` (true alpha — never ship AI PNGs with baked checkerboard “transparency”). Rules card uses `Prop_FanRules` (housing+blades composite). Powered by `PowerButton`. Facing: Left/Right/Up. On → blades spin + wind streaks; hum while on-camera. Pushes Carl + oil/battery with distance falloff (horizontal adds vx; upward sets vy). **Wind force + streaks are LOS-blocked by solids** (walls, floors, springs, etc.) but **not** by `OneWayPlatform` (wind passes through like Carl rising through a one-way).
@@ -37,9 +40,9 @@ Shared base scene only: `SampleScene` (split floors, L1 ground Spring, WinLine, 
 ## Scripts (`Assets/Scripts/`)
 | Area | Files |
 |------|-------|
-| Carl | `CarlResources`, `CarlLocomotion` (`AddExternalVelocityX` / `SetExternalVelocityY` for fans), `CarlPickupChaser`, `CarlVisual`, `CarlSparkEffect` |
-| Level | `GameDirector` (spawn walls/button walls/platforms/springs/spikes), `LevelSession`, `Level1Layout` / `Level2Layout` / `Level3Layout`, `LevelPropDump` → `LevelDumps/Level{N}.txt`, `Data/LevelSpawnConfig`, `Resources/Level{N}Spawns` |
-| Props | `ResourcePickup` (dynamic RB; collides with floors/walls/one-ways like Carl; `SetWindVelocityX`/`Y` for fans; Carl solid collision ignored so trigger collect still works), `SpringPad`, `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall` (`hideButton`), `LinkedWallButton`, `Spikes` (`faceDown`), `PoweredFan` (Left/Right/Up), `PowerButton`, `IPowerable` |
+| Carl | `CarlResources`, `CarlLocomotion` (`Launch` / `LaunchVertical`, rides moving ground underfoot via position delta; `AddExternalVelocityX` / `SetExternalVelocityY` for fans), `CarlPickupChaser`, `CarlVisual`, `CarlSparkEffect` |
+| Level | `GameDirector` (spawn walls/button walls/platforms/springs/spikes), `LevelSession`, `Level1Layout` / `Level2Layout` / `Level3Layout` / `Level4Layout`, `LevelPropDump` → `LevelDumps/Level{N}.txt`, `Data/LevelSpawnConfig`, `Resources/Level{N}Spawns` |
+| Props | `ResourcePickup` (dynamic RB; collides with floors/walls/one-ways like Carl; `SetWindVelocityX`/`Y` for fans; Carl solid collision ignored so trigger collect still works), `SpringPad` (`Facing` Up/Right/Left), `OneWayPlatform`, `WinLine`, `DraggableWall`, `ButtonWall` (`hideButton`), `LinkedWallButton`, `Spikes` (`faceDown`), `PoweredFan` (Left/Right/Up), `PowerButton`, `IPowerable` |
 | UI / audio | `MainMenuController` (Rules icons = same `UI/Icon_Oil` / `UI/Icon_Battery`), `MenuUi`, `ResourceHud` (battery meter: energy fill, oil color), `LoseOverlay` (restart = active scene name), `GameMusic`, `GameSfx` (procedural power click + fan hum), `GameAudioSettings` |
 | Visual helpers | `GameSprites` (+ `Triangle` for drag arrows), `SpriteQuad` — procedural props use `GameSprites.White` (never null material); `AspectRatioCamera` + `CarlCameraFollow` (vertical smooth chase, Carl ~1/3 up screen) |
 
@@ -72,7 +75,7 @@ Shared base scene only: `SampleScene` (split floors, L1 ground Spring, WinLine, 
 Assets/Art/         source PNGs
 Assets/Resources/   Audio, UI, Props, *Spawns, CarlAppearance
 Assets/Scripts/     gameplay (+ Data/)
-Assets/Scenes/      MainMenu, SampleScene (L1+L2+L3 base), Level2 (unused)
+Assets/Scenes/      MainMenu, SampleScene (L1–L4 base), Level2 (unused)
 Assets/Editor/      PlayModeStartScene
 Assets/Settings/    URP
 ```

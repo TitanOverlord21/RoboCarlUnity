@@ -25,6 +25,8 @@ public class DraggableWall : MonoBehaviour
     Vector2 _startPosition;
     bool _dragging;
     float _grabOffset;
+    bool _hasDragTarget;
+    float _dragTargetAxis;
 
     public static DraggableWall Spawn(
         Vector2 position,
@@ -94,6 +96,21 @@ public class DraggableWall : MonoBehaviour
             TryBeginDrag(pointer.position.ReadValue());
     }
 
+    void FixedUpdate()
+    {
+        if (!_hasDragTarget || _body == null)
+            return;
+
+        var pos = _body.position;
+        if (vertical)
+            pos.y = _dragTargetAxis;
+        else
+            pos.x = _dragTargetAxis;
+
+        // FixedUpdate + MovePosition so dynamic riders (Carl) are carried.
+        _body.MovePosition(pos);
+    }
+
     void TryBeginDrag(Vector2 screenPosition)
     {
         if (!TryGetWorldPoint(screenPosition, out var world))
@@ -118,20 +135,14 @@ public class DraggableWall : MonoBehaviour
         float startAxis = vertical ? _startPosition.y : _startPosition.x;
         float min = startAxis - dragNegative;
         float max = startAxis + dragPositive;
-        axis = Mathf.Clamp(axis, min, max);
-
-        var pos = _body.position;
-        if (vertical)
-            pos.y = axis;
-        else
-            pos.x = axis;
-
-        _body.position = pos;
+        _dragTargetAxis = Mathf.Clamp(axis, min, max);
+        _hasDragTarget = true;
     }
 
     void EndDrag()
     {
         _dragging = false;
+        _hasDragTarget = false;
     }
 
     static bool TryGetWorldPoint(Vector2 screenPosition, out Vector2 world)

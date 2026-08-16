@@ -32,6 +32,13 @@ public class CarlLocomotion : MonoBehaviour
     float _knockbackTimer;
     Vector2? _pendingKnockbackVelocity;
 
+    // Moving ground under Carl's feet (walls, platforms, etc.) — carry by position delta.
+    Collider2D _groundCollider;
+    Transform _groundTransform;
+    Rigidbody2D _groundBody;
+    Vector2 _groundPrevPosition;
+    bool _hasGroundPrev;
+
     public bool IsGrounded { get; private set; }
     public bool CanMakeDecisions => !_knockbackActive && _decisionLock <= 0f && !_resources.IsGameOver;
     public float EffectiveWalkSpeed => BaseWalkSpeed * (_resources.IsOilLow ? 0.5f : 1f);
@@ -101,6 +108,7 @@ public class CarlLocomotion : MonoBehaviour
         if (_resources.IsGameOver)
         {
             _rigidbody.linearVelocity = new Vector2(0f, _rigidbody.linearVelocity.y);
+            ClearGroundCarry();
             return;
         }
 
@@ -110,7 +118,9 @@ public class CarlLocomotion : MonoBehaviour
             _pendingKnockbackVelocity = null;
         }
 
+        // Platforms/walls move in earlier FixedUpdates; ride whatever is underfoot.
         RefreshGrounded();
+        ApplyGroundCarry();
 
         if (_knockbackActive)
         {
@@ -130,6 +140,7 @@ public class CarlLocomotion : MonoBehaviour
 
             if (IsGrounded && !_forcedMovement && !_walkRequested)
             {
+                // Relative rest on moving ground; carry is applied via position delta.
                 _rigidbody.linearVelocity = new Vector2(0f, _rigidbody.linearVelocity.y);
                 ClearDirectionIntent();
             }
@@ -236,13 +247,34 @@ public class CarlLocomotion : MonoBehaviour
     /// </summary>
     public void LaunchVertical(float velocityY)
     {
+        Launch(new Vector2(_rigidbody != null ? _rigidbody.linearVelocity.x : 0f, velocityY));
+    }
+
+    /// <summary>
+    /// Instant launch with a fixed velocity (springs). Not AddForce.
+    /// Mostly-horizontal launches use knockback so ground-brake doesn't eat vx
+    /// while Carl is still standing on a platform.
+    /// </summary>
+    public void Launch(Vector2 velocity)
+    {
         if (_resources.IsGameOver)
             return;
 
         _walkRequested = false;
         IsGrounded = false;
+        ClearGroundCarry();
         ClearDirectionIntent();
-        _rigidbody.linearVelocity = new Vector2(_rigidbody.linearVelocity.x, velocityY);
+
+        bool mostlyHorizontal = Mathf.Abs(velocity.x) >= Mathf.Abs(velocity.y) * 0.55f;
+        if (mostlyHorizontal)
+        {
+            _knockbackActive = true;
+            _knockbackTimer = 0f;
+            _decisionLock = Mathf.Max(_decisionLock, 0.35f);
+            _pendingKnockbackVelocity = velocity;
+        }
+
+        _rigidbody.linearVelocity = velocity;
     }
 
     /// <summary>
@@ -264,6 +296,7 @@ public class CarlLocomotion : MonoBehaviour
 
         _walkRequested = false;
         IsGrounded = false;
+        ClearGroundCarry();
         ClearDirectionIntent();
         _knockbackActive = true;
         _knockbackTimer = 0f;
@@ -273,10 +306,65 @@ public class CarlLocomotion : MonoBehaviour
         _rigidbody.linearVelocity = new Vector2(vx, vy);
     }
 
-    public void RefreshGrounded() => IsGrounded = CheckGrounded();
-
-    bool CheckGrounded()
+    public void RefreshGrounded()
     {
+        IsGrounded = TryGetGroundUnderFeet(out var ground);
+        if (!IsGrounded || ground == null)
+        {
+            ClearGroundCarry();
+            return;
+        }
+
+        if (ground != _groundCollider)
+        {
+            _groundCollider = ground;
+            _groundTransform = ground.transform;
+            _groundBody = ground.attachedRigidbody;
+            _groundPrevPosition = GetGroundPosition();
+            _hasGroundPrev = true;
+        }
+    }
+
+    /// <summary>
+    /// Move with whatever solid is under Carl's feet (draggable platforms, button
+    /// walls, future movers). Uses the ground's position delta so any kinematic
+    /// or transform-moved surface carries him — not limited to one prop type.
+    /// </summary>
+    void ApplyGroundCarry()
+    {
+        if (!IsGrounded || _groundTransform == null || !_hasGroundPrev)
+            return;
+
+        var groundPos = GetGroundPosition();
+        var delta = groundPos - _groundPrevPosition;
+        _groundPrevPosition = groundPos;
+
+        if (delta.sqrMagnitude < 1e-10f)
+            return;
+
+        _rigidbody.position += delta;
+    }
+
+    void ClearGroundCarry()
+    {
+        _groundCollider = null;
+        _groundTransform = null;
+        _groundBody = null;
+        _hasGroundPrev = false;
+    }
+
+    Vector2 GetGroundPosition()
+    {
+        if (_groundBody != null)
+            return _groundBody.position;
+        if (_groundTransform != null)
+            return _groundTransform.position;
+        return Vector2.zero;
+    }
+
+    bool TryGetGroundUnderFeet(out Collider2D ground)
+    {
+        ground = null;
         if (_collider == null)
             return false;
 
@@ -285,15 +373,22 @@ public class CarlLocomotion : MonoBehaviour
         var probeSize = new Vector2(Mathf.Max(0.2f, bounds.size.x * 0.85f), 0.06f);
 
         var hits = Physics2D.OverlapBoxAll(feetCenter, probeSize, 0f, groundMask);
+        float bestTop = float.NegativeInfinity;
         foreach (var hit in hits)
         {
             if (!IsExternalGround(hit))
                 continue;
 
-            return true;
+            // Prefer the highest supporting surface when several overlap the feet.
+            float top = hit.bounds.max.y;
+            if (top < bestTop)
+                continue;
+
+            bestTop = top;
+            ground = hit;
         }
 
-        return false;
+        return ground != null;
     }
 
     /// <summary>

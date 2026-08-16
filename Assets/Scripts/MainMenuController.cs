@@ -110,7 +110,7 @@ public class MainMenuController : MonoBehaviour
         for (var i = 0; i < LevelCount; i++)
         {
             int level = i + 1;
-            bool available = level <= 3;
+            bool available = level <= 4;
             var color = available ? AccentColor : MutedColor;
             string label = available ? $"Level {level}" : $"Level {level}\nSoon";
 
@@ -352,7 +352,7 @@ public class MainMenuController : MonoBehaviour
                 Title = "Spring",
                 Icon = null,
                 IconTint = new Color(0.78f, 0.52f, 0.22f, 1f),
-                Body = "Stand on a spring to bounce upward. Use springs to reach high places like the green win line."
+                Body = "Press into a spring's pad to bounce along the way it faces — up, left, or right. Use springs to reach high places or knock Carl onto a new path."
             },
             new RuleEntry
             {
@@ -641,6 +641,13 @@ public class MainMenuController : MonoBehaviour
         if (level == 3)
         {
             LevelSession.SelectedLevel = 3;
+            SceneManager.LoadScene(Level1SceneName);
+            return;
+        }
+
+        if (level == 4)
+        {
+            LevelSession.SelectedLevel = 4;
             SceneManager.LoadScene(Level1SceneName);
             return;
         }

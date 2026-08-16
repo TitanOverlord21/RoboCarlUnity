@@ -73,7 +73,10 @@ public static class LevelPropDump
 
         AppendSection(sb, "Springs");
         foreach (var spring in SortByX(Object.FindObjectsByType<SpringPad>()))
-            AppendTransform(sb, spring.gameObject, extra: $"size={Fmt(spring.Size)} launchVy={SpringPad.LaunchVelocityY:0.###}");
+            AppendTransform(
+                sb,
+                spring.gameObject,
+                extra: $"facing={spring.PadFacing} size={Fmt(spring.Size)} launch={spring.LaunchPower:0.###}");
 
         AppendSection(sb, "OneWayPlatforms");
         foreach (var platform in SortByX(Object.FindObjectsByType<OneWayPlatform>()))

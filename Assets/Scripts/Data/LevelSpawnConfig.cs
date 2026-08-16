@@ -44,6 +44,10 @@ public class LevelSpawnConfig : ScriptableObject
         public Vector2 position;
         public float width;
         public float height;
+        [Tooltip("Launch face: Up (default), Right, or Left.")]
+        public SpringPad.Facing facing;
+        [Tooltip("Launch speed for this spring. 0 = use SpringPad.DefaultLaunchSpeed.")]
+        public float launchSpeed;
     }
 
     [Serializable]

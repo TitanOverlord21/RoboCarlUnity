@@ -20,18 +20,25 @@ public class GameDirector : MonoBehaviour
             case 3:
                 Level3Layout.Apply();
                 break;
+            case 4:
+                Level4Layout.Apply();
+                break;
             default:
                 Level1Layout.Apply();
                 break;
         }
 
-        if (!disableWinLine)
+        // Level 4 strips the scene WinLine for now (goal will sit much higher later).
+        if (!disableWinLine && LevelSession.SelectedLevel != 4)
             WinLine.EnsureExists();
 
         SpawnLevelProps();
 
         if (LevelSession.SelectedLevel == 3)
             Level3Layout.SpawnDoorLinkButton();
+
+        if (LevelSession.SelectedLevel == 4)
+            Level4Layout.PlaceCarlOnStartPlatform();
     }
 
     void Start()
@@ -43,12 +50,20 @@ public class GameDirector : MonoBehaviour
         }
 
         // Pickups spawn in CarlResources.Start; wait one frame so the dump is complete.
+        // L4 re-places Carl after SnapFeetToGround so he stays on the start platform.
         StartCoroutine(WriteLevelDumpNextFrame());
     }
 
     IEnumerator WriteLevelDumpNextFrame()
     {
+        if (LevelSession.SelectedLevel == 4)
+            Level4Layout.PlaceCarlOnStartPlatform();
+
         yield return null;
+
+        if (LevelSession.SelectedLevel == 4)
+            Level4Layout.PlaceCarlOnStartPlatform();
+
         LevelPropDump.WriteActiveLevel();
     }
 
@@ -107,7 +122,7 @@ public class GameDirector : MonoBehaviour
             {
                 float width = entry.width > 0f ? entry.width : 1.2f;
                 float height = entry.height > 0f ? entry.height : 0.35f;
-                SpringPad.Spawn(entry.position, width, height);
+                SpringPad.Spawn(entry.position, width, height, entry.facing, entry.launchSpeed);
             }
         }
 
