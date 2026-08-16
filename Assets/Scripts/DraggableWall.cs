@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 /// Solid metal wall that click-drags only along its length axis, clamped to
 /// per-instance distances from its start position (customizable per level).
 /// </summary>
+[DefaultExecutionOrder(-20)]
 public class DraggableWall : MonoBehaviour
 {
     static readonly Color PlateColor = new(0.55f, 0.58f, 0.62f, 1f);
@@ -107,8 +108,8 @@ public class DraggableWall : MonoBehaviour
         else
             pos.x = _dragTargetAxis;
 
-        // FixedUpdate + MovePosition so dynamic riders (Carl) are carried.
-        _body.MovePosition(pos);
+        // Immediate pose so Carl's later FixedUpdate sees this tick's delta.
+        _body.position = pos;
     }
 
     void TryBeginDrag(Vector2 screenPosition)

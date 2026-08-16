@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 /// full travel range (same positive/negative clamps as DraggableWall). Input is
 /// locked until the ease-in move finishes.
 /// </summary>
+[DefaultExecutionOrder(-20)]
 public class ButtonWall : MonoBehaviour
 {
     static readonly Color PlateColor = new(0.42f, 0.48f, 0.58f, 1f);
@@ -202,7 +203,8 @@ public class ButtonWall : MonoBehaviour
             pos.y = axis;
         else
             pos.x = axis;
-        _body.MovePosition(pos);
+        // Immediate pose so riders see this tick's delta (same as DraggableWall).
+        _body.position = pos;
     }
 
     void SetButtonBusy(bool busy)

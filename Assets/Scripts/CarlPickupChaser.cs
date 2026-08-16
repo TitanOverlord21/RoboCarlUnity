@@ -26,7 +26,7 @@ public class CarlPickupChaser : MonoBehaviour
         if (!_locomotion.CanMakeDecisions)
             return;
 
-        _locomotion.RefreshGrounded();
+        // Last tick's grounded flag — do not re-probe before Carl has been carried.
         if (!_locomotion.IsGrounded)
             return;
 

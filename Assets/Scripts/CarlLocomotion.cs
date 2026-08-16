@@ -118,9 +118,10 @@ public class CarlLocomotion : MonoBehaviour
             _pendingKnockbackVelocity = null;
         }
 
-        // Platforms/walls move in earlier FixedUpdates; ride whatever is underfoot.
-        RefreshGrounded();
+        // Carry last support first, then probe. Movers run earlier this tick.
         ApplyGroundCarry();
+        Physics2D.SyncTransforms();
+        RefreshGrounded();
 
         if (_knockbackActive)
         {
@@ -225,7 +226,10 @@ public class CarlLocomotion : MonoBehaviour
         var v = _rigidbody.linearVelocity;
         _rigidbody.linearVelocity = new Vector2(v.x, velocityY);
         if (velocityY > 0.05f)
+        {
             IsGrounded = false;
+            ClearGroundCarry();
+        }
     }
 
     /// <summary>
@@ -308,31 +312,31 @@ public class CarlLocomotion : MonoBehaviour
 
     public void RefreshGrounded()
     {
-        IsGrounded = TryGetGroundUnderFeet(out var ground);
-        if (!IsGrounded || ground == null)
+        if (TryGetGroundUnderFeet(out var ground))
         {
-            ClearGroundCarry();
+            IsGrounded = true;
+            BindGround(ground);
             return;
         }
 
-        if (ground != _groundCollider)
+        if (RememberedGroundStillSupports())
         {
-            _groundCollider = ground;
-            _groundTransform = ground.transform;
-            _groundBody = ground.attachedRigidbody;
+            IsGrounded = true;
             _groundPrevPosition = GetGroundPosition();
-            _hasGroundPrev = true;
+            return;
         }
+
+        IsGrounded = false;
+        ClearGroundCarry();
     }
 
     /// <summary>
-    /// Move with whatever solid is under Carl's feet (draggable platforms, button
-    /// walls, future movers). Uses the ground's position delta so any kinematic
-    /// or transform-moved surface carries him — not limited to one prop type.
+    /// Ride the last support using its position delta this tick. Must run before
+    /// the foot probe so a moving platform cannot outrun the overlap check.
     /// </summary>
     void ApplyGroundCarry()
     {
-        if (!IsGrounded || _groundTransform == null || !_hasGroundPrev)
+        if (_groundTransform == null || !_hasGroundPrev)
             return;
 
         var groundPos = GetGroundPosition();
@@ -343,6 +347,36 @@ public class CarlLocomotion : MonoBehaviour
             return;
 
         _rigidbody.position += delta;
+    }
+
+    void BindGround(Collider2D ground)
+    {
+        if (ground == _groundCollider && _hasGroundPrev)
+        {
+            _groundPrevPosition = GetGroundPosition();
+            return;
+        }
+
+        _groundCollider = ground;
+        _groundTransform = ground.transform;
+        _groundBody = ground.attachedRigidbody;
+        _groundPrevPosition = GetGroundPosition();
+        _hasGroundPrev = true;
+    }
+
+    bool RememberedGroundStillSupports()
+    {
+        if (_groundCollider == null || _collider == null || !_hasGroundPrev)
+            return false;
+
+        var feet = _collider.bounds;
+        var ground = _groundCollider.bounds;
+        bool overlapX = feet.min.x < ground.max.x && feet.max.x > ground.min.x;
+        if (!overlapX)
+            return false;
+
+        float feetY = feet.min.y;
+        return feetY <= ground.max.y + 0.2f && feetY >= ground.max.y - 0.25f;
     }
 
     void ClearGroundCarry()
